@@ -1,4 +1,4 @@
-=== IP2Location Country Bocker ===
+=== IP2Location Country Blocker ===
 Contributors: IP2Location
 Donate link: http://www.ip2location.com
 Tags: country blocker, targeted content, geolocation
