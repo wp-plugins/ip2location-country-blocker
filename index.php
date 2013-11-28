@@ -229,8 +229,7 @@ class IP2LocationCountryBlocker {
 		}
 	}
 
-	function check(){
-		$_SERVER['REMOTE_ADDR'] = '8.8.8.8';
+	function check(){s
 		$ipAddress = $_SERVER['REMOTE_ADDR'];
 
 		if(isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && filter_var($_SERVER["HTTP_X_FORWARDED_FOR"], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)){
