@@ -1,5 +1,4 @@
 <?php
-
 /*
 Plugin Name: IP2Location Country Blocker
 Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
@@ -8,7 +7,6 @@ Version: 1.0
 Author: IP2Location
 Author URI: http://www.ip2location.com
 */
-
 define('DS', DIRECTORY_SEPARATOR);
 define('_ROOT', dirname(__FILE__) . DS);
 
