@@ -21,6 +21,11 @@ BIN file download: [IP2Location Commercial database](http://ip2location.com "IP2
 = More Information =
 Please visit us at [http://www.ip2location.com](http://www.ip2location.com/tutorials/wordpress-ip2location-country-blocker "http://www.ip2location.com")
 
+== Screenshots ==
+
+1. **Country lookup by ip address** - Allow you to perform country lookup by entering a IP address.
+2. **Frontend blocking** - Select countries that you would like to block from accessing your blog pages. Page redirection supported.
+3. **Backend blocking** - Select countries that you would like to block the visitors from accessing your admin area (wp-login) page. Page redirection supported.
 
 == Installation ==
 
