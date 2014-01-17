@@ -19,7 +19,7 @@ This plugin uses IP2Location BIN file for location queries that free your hassle
 BIN file download: [IP2Location Commercial database](http://ip2location.com "IP2Location commercial database") | [IP2Location LITE database (free edition)](http://lite.ip2location.com "IP2Location LITE database (free edition)")
 
 = More Information =
-Please visit us at [http://www.ip2location.com](http://www.ip2location.com/tutorials/wordpress-ip2location-country-blocker "http://www.ip2location.com")
+Please visit us at [http://www.ip2location.com](http://www.ip2location.com "http://www.ip2location.com")
 
 == Screenshots ==
 
