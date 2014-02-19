@@ -14,7 +14,7 @@ IP2Location Country Blocker allows user to block visitors from accessing your fr
 
 In addition, this plugin also allows you to redirect the users to a predefined page based on countries.  
 
-This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database.
+This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database. Moreover, IP2Location provides monthly BIN update for your download, so that you could have the latest and accurate query results.
 
 BIN file download: [IP2Location Commercial database](http://ip2location.com "IP2Location commercial database") | [IP2Location LITE database (free edition)](http://lite.ip2location.com "IP2Location LITE database (free edition)")
 

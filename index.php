@@ -14,11 +14,16 @@ $parts = explode(DS, dirname(__FILE__));
 array_pop($parts);
 array_pop($parts);
 
-define('IP2LOCATION_DB', implode(DS, $parts) . DS . 'ip2location' . DS);
+//Change the DB location to the same folder as plugin
+//define('IP2LOCATION_DB', implode(DS, $parts) . DS . 'ip2location' . DS);
+define('IP2LOCATION_DB', substr(plugin_dir_path(__FILE__), 0, -1) . DS . "database.bin");
 
 class IP2LocationCountryBlocker {
 	function admin_options() {
 		if(is_admin()) {
+			//enable jquery
+			add_action( 'wp_enqueue_script', 'load_jquery' );
+	
 			echo '
 			<div class="wrap">
 				<h2>IP2Location Country Blocker</h2>
@@ -28,36 +33,100 @@ class IP2LocationCountryBlocker {
 				</p>
 
 				<p>&nbsp;</p>';
-
-			if(!file_exists(IP2LOCATION_DB . 'database.bin')){
+				
+			if(!file_exists(IP2LOCATION_DB)){
 				echo '
-				<div style="border:1px solid #990000;background:#ffecff;padding:10px">
-					Unable to find the IP2Location BIN file! Please follow the below instructions to install the BIN file:
-					<ul style="list-style-type:circle;margin-left:20px">
-						<li>Download the BIN file at the following links: <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.</li>
-						<li>Decompress the zip file and rename the BIN file (with .BIN extension) to <b>database.bin</b>.</li>
-						<li>Upload <b>database.bin</b> to /wp-content/ip2location. Note: Please create <b>ip2location</b> folder if it doesn\'t exist.</li>
-					</ul>
+				<div style="border:1px solid #f00;background:#faa;padding:10px">
+					Unable to find the IP2Location BIN database! Please download the database at at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.
 				</div>';
 			}
 			else{
 				echo '
 				<p>
-					<b>Database Version: </b>
-					' . date('F Y', filemtime(IP2LOCATION_DB . 'database.bin')) . '
+					<b>Current Database Version: </b>
+					' . date('F Y', filemtime(IP2LOCATION_DB)) . '
 				</p>';
 
-				if(filemtime(IP2LOCATION_DB . 'database.bin') < strtotime('-2 months')){
+				if(filemtime(IP2LOCATION_DB) < strtotime('-2 months')){
 					echo '
-					<p style="border:1px solid #990000;background:#ffecff;padding:10px">
-						<b>Reminder: </b>Your IP2Location database was outdated. Please download the latest version from <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> or <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>..
-					</p>
-					<p style="border:1px solid #990000;background:#ffecff;padding:10px">
-						After downloaded the package, decompress it and rename the .BIN file inside the package to <strong>database.bin</strong>. Then, upload the BIN file,<strong>database.bin</strong>, to <em>/wp-content/ip2location/</em>.
+					<p style="border:1px solid #f00;background:#faa;padding:10px">
+						<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
 					</p>';
 				}
 			}
 
+			//database update
+			echo '
+				<script>
+					jQuery(document).ready(function($) {
+						// Code here will be executed on document ready. Use $ as normal.
+						jQuery("#download").click(function(){
+							var site_url = jQuery("#site_url").val();
+							var product_code = jQuery("#product_code").val();
+							var username = jQuery("#username").val();
+							var password = jQuery("#password").val();
+							var db_path = jQuery("#db_path").val();
+							
+							//disable the download button
+							jQuery("#download").attr("disabled","disabled");
+							jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #ccc; background-color:#ffa;\">Downloading " + product_code + " BIN database in progress... Please wait...</div>");
+							
+							jQuery.ajax({
+								url: site_url + "/wp-content/plugins/ip2location-country-blocker/ip2location_download.php",
+								type: "POST",
+								data: {
+									product_code:product_code.toString(), 
+									username:username.toString(), 
+									password:password.toString(),
+									db_path:db_path.toString()}
+							})
+								.done(function(result) {
+									if (result == "SUCCESS"){
+										alert("Downloading completed.");
+										jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #0f0; background-color:#afa;\">Successfully downloaded the " + product_code + " BIN database. Please refresh information by reloading the page.</div>");
+									}
+									else{
+										alert("Downloading failed");
+										jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #f00; background-color:#faa;\">Failed to download " + product_code + " BIN database. Please make sure you correctly enter the product code and login crendential. Please also take note to download the BIN product code only.</a>");
+									}
+								})
+								.fail(function() {
+									alert( "error" );
+								})
+								.always(function() {
+									//clear the entry
+									jQuery("#product_code").val("");
+									jQuery("#username").val("");
+									jQuery("#password").val("");
+									jQuery("#download").removeAttr("disabled");
+								});
+						});
+					});
+				</script>
+				<div style="margin-top:10px; padding:10px; border:1px solid #ccc;">
+					<span style="display:block; font-weight:bold; margin-bottom:5px;">Download BIN Database</span>
+					Product Code: <input id="product_code" type="text" value="" style="margin-right:10px;" />
+					Username: <input id="username" type="text" value="" style="margin-right:10px;" />
+					Password: <input id="password" type="password" value="" style="margin-right:10px;" /> <button id="download">Download</button>
+					<input id="site_url" type="hidden" value="' . get_site_url() . '" />
+					<input id="db_path" type="hidden" value="' . plugins_url('ip2location-country-blocker/database.bin') . '" />
+					<span style="display:block; font-size:0.8em">Enter the product code, i.e, DB1LITEBIN, (the code in square bracket on your license page) and login credential for the download.</span>
+					
+					<div style="margin-top:20px;">
+						Note: If you failed to download the BIN database using this automated downloading tool, please follow the below procedures to manually update the database.
+						<ol style="list-style-type:circle;margin-left:20px">
+							<li>Download the BIN database at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.</li>
+							<li>Decompress the zip file and rename the BIN database to <b>database.bin</b>.</li>
+							<li>Upload <b>database.bin</b> to /wp-content/plugins/ip2location-country-blocker/.</li>
+							<li>Once completed, please refresh the information by reloading the setting page.</li>
+						</ol>
+					</div>
+				</div>
+				<div id="download_status" style="margin:10px 0;">
+				
+				</div>
+			';
+			
 			echo '
 				<p>&nbsp;</p>
 				<a name="ip-query"></a>
@@ -294,6 +363,10 @@ class IP2LocationCountryBlocker {
 </html>');
 	}
 
+	function load_jquery() {
+		wp_enqueue_script( 'jquery' );
+	}
+
 	function admin_page(){
 		add_management_page('IP2Location Country Blocker', 'IP2Location Country Blocker', 8, 'ip2location-country-blocker', array(&$this, 'admin_options'));
 	}
@@ -340,16 +413,16 @@ class IP2LocationCountryBlocker {
 
 	function get_location($ip){
 		// Make sure IP2Location database is exist
-		if(!file_exists(IP2LOCATION_DB . 'database.bin')) return false;
+		if(!file_exists(IP2LOCATION_DB)) return false;
 
 		require_once(_ROOT . 'ip2location.class.php');
 
 		// Create IP2Location object
-		$geo = new IP2Location(IP2LOCATION_DB . 'database.bin');
+		$geo = new IP2Location(IP2LOCATION_DB);
 
 		// Get geolocation by IP address
 		$result = $geo->lookup($ip);
-
+		
 		return array('countryCode'=>$result->countryCode, 'countryName'=>IP2LocationCountryBlocker::set_case($result->countryName));
 	}
 
