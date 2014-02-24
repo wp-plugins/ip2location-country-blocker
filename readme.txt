@@ -16,7 +16,7 @@ In addition, this plugin also allows you to redirect the users to a predefined p
 
 This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database. Moreover, IP2Location provides monthly BIN update for your download, so that you could have the latest and accurate query results.
 
-BIN file download: [IP2Location Commercial database](http://ip2location.com "IP2Location commercial database") | [IP2Location LITE database (free edition)](http://lite.ip2location.com "IP2Location LITE database (free edition)")
+BIN file download: [IP2Location Commercial database](http://ip2location.com "IP2Location commercial database") | [IP2Location LITE database](http://lite.ip2location.com "IP2Location LITE database")
 
 = More Information =
 Please visit us at [http://www.ip2location.com](http://www.ip2location.com "http://www.ip2location.com")
@@ -26,6 +26,12 @@ Please visit us at [http://www.ip2location.com](http://www.ip2location.com "http
 1. **Country lookup by ip address** - Allow you to perform country lookup by entering a IP address.
 2. **Frontend blocking** - Select countries that you would like to block from accessing your blog pages. Page redirection supported.
 3. **Backend blocking** - Select countries that you would like to block the visitors from accessing your admin area (wp-login) page. Page redirection supported.
+
+
+== Changelog ==
+
+1.1 Added dropdown selection for product code.
+
 
 == Installation ==
 

@@ -3,7 +3,7 @@
 Plugin Name: IP2Location Country Blocker
 Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
 Description: Block visitors from accessing your website or admin area by their country.
-Version: 1.0
+Version: 1.1
 Author: IP2Location
 Author URI: http://www.ip2location.com
 */
@@ -105,8 +105,25 @@ class IP2LocationCountryBlocker {
 				</script>
 				<div style="margin-top:10px; padding:10px; border:1px solid #ccc;">
 					<span style="display:block; font-weight:bold; margin-bottom:5px;">Download BIN Database</span>
-					Product Code: <input id="product_code" type="text" value="" style="margin-right:10px;" />
-					Username: <input id="username" type="text" value="" style="margin-right:10px;" />
+					Product Code: <select id="product_code" type="text" value="" style="margin-right:10px;" >
+						<option value="DB1LITEBIN">DB1LITEBIN</option>
+						<option value="DB3LITEBIN">DB3LITEBIN</option>
+						<option value="DB5LITEBIN">DB5LITEBIN</option>
+						<option value="DB9LITEBIN">DB9LITEBIN</option>
+						<option value="DB11LITEBIN">DB11LITEBIN</option>
+						<option value="DB1BIN">DB1BIN</option>
+						<option value="DB2BIN">DB2BIN</option>
+						<option value="DB3BIN">DB3BIN</option>
+						<option value="DB4BIN">DB4BIN</option>
+						<option value="DB5BIN">DB5BIN</option>
+						<option value="DB6BIN">DB6BIN</option>
+						<option value="DB7BIN">DB7BIN</option>
+						<option value="DB8BIN">DB8BIN</option>
+						<option value="DB9BIN">DB9BIN</option>
+						<option value="DB10BIN">DB10BIN</option>
+						<option value="DB11BIN">DB11BIN</option>
+					</select>
+					Email: <input id="username" type="text" value="" style="margin-right:10px;" />
 					Password: <input id="password" type="password" value="" style="margin-right:10px;" /> <button id="download">Download</button>
 					<input id="site_url" type="hidden" value="' . get_site_url() . '" />
 					<input id="db_path" type="hidden" value="' . plugins_url('ip2location-country-blocker/database.bin') . '" />
