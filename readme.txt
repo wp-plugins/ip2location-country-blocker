@@ -21,16 +21,46 @@ BIN file download: [IP2Location Commercial database](http://ip2location.com "IP2
 = More Information =
 Please visit us at [http://www.ip2location.com](http://www.ip2location.com "http://www.ip2location.com")
 
+== Frequently Asked Questions ==
+= Do I need to download the BIN file after the plugin installation? =
+Yes, the plugin only provide you an outdated sample BIN file.
+
+= Where can I download the BIN file? =
+You can download the free LITE edition at [http://lite.ip2location.com](http://lite.ip2location.com "http://lite.ip2location.com") or commercial edition at [http://www.ip2location.com](http://www.ip2location.com "http://www.ip2location.com").
+
+= Do I need to update the BIN file? =
+We encourage you to update your BIN file every month so that your plugin works with the latest IP geolocation result. The update usually be ready on the 1st week of every calendar month.
+
+= What is the frontend? =
+The frontend means your blog pages.
+
+= What is the backend? =
+The backend means the wordpress admin pages.
+
+= Can I select multiple countries for blocking? =
+Yes, you can.
+
+= Can I send an 403 page on blocked IP? =
+Yes, you can use the default 403 provided in this plugin.
+
+= Can I custom my own error page? =
+Yes, you can create a new page on wordpress and design your own error display. Once completed, you can mark your error page as "private" and configure the error redirection at the setting page.
+
+= Unable to find your answer here? =
+Send us email at support@ip2location.com
+
 == Screenshots ==
 
 1. **Country lookup by ip address** - Allow you to perform country lookup by entering a IP address.
 2. **Frontend blocking** - Select countries that you would like to block from accessing your blog pages. Page redirection supported.
 3. **Backend blocking** - Select countries that you would like to block the visitors from accessing your admin area (wp-login) page. Page redirection supported.
+4. **Custom error page** - Custom your own error page to suit your wordpress theme.
 
 
 == Changelog ==
 
 1.1 Added dropdown selection for product code.
+1.2 Allow user to custom their own error page.
 
 
 == Installation ==

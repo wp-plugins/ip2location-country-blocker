@@ -3,7 +3,7 @@
 Plugin Name: IP2Location Country Blocker
 Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
 Description: Block visitors from accessing your website or admin area by their country.
-Version: 1.1
+Version: 1.2
 Author: IP2Location
 Author URI: http://www.ip2location.com
 */
@@ -184,6 +184,34 @@ class IP2LocationCountryBlocker {
 			$frontendTarget = (isset($_POST['frontendTarget'])) ? $_POST['frontendTarget'] : get_option('icb_frontend_target');
 			$backendTarget = (isset($_POST['backendTarget'])) ? $_POST['backendTarget'] : get_option('icb_backend_target');
 
+			//add the front-end 403 custom url
+			$frontend403Url = (isset($_POST['frontend403Url'])) ? $_POST['frontend403Url'] : get_option('icb_frontend_403_url');
+			$backend403Url = (isset($_POST['backend403Url'])) ? $_POST['backend403Url'] : get_option('icb_backend_403_url');
+			
+			//Get all pages for display into a dropdown list (frontend)
+			$frontend_page_dropdown = '<select name="frontend403Url">';
+			$frontend_page_dropdown .= '<option value="default">default</option>';
+			$pages = get_pages(array('post_status'=>'publish,private')); 
+			foreach ($pages as $page_data) {
+				if ($frontend403Url == $page_data->guid)
+					$frontend_page_dropdown .= '<option value="' . $page_data->guid . '" selected="selected">' . $page_data->post_title . '</option>';
+				else
+					$frontend_page_dropdown .= '<option value="' . $page_data->guid . '">' . $page_data->post_title . '</option>';
+			}
+			$frontend_page_dropdown .= '</select>';
+			
+			//Get all pages for display into a dropdown list (backend)
+			$backend_page_dropdown = '<select name="backend403Url">';
+			$backend_page_dropdown .= '<option value="default">default</option>';
+			$pages = get_pages(array('post_status'=>'publish,private')); 
+			foreach ($pages as $page_data) {
+				if ($backend403Url == $page_data->guid)
+					$backend_page_dropdown .= '<option value="' . $page_data->guid . '" selected="selected">' . $page_data->post_title . '</option>';
+				else
+					$backend_page_dropdown .= '<option value="' . $page_data->guid . '">' . $page_data->post_title . '</option>';
+			}
+			$backend_page_dropdown .= '</select>';
+			
 			echo '
 				<form action="#ip-query" method="post">
 					<p>
@@ -210,7 +238,10 @@ class IP2LocationCountryBlocker {
 						update_option('icb_frontend_banlist', $frontendBanlist);
 						update_option('icb_frontend_option', $frontendOption);
 						update_option('icb_frontend_target', $frontendTarget);
-
+						
+						//add custom 403 errors
+						update_option('icb_frontend_403_url', $frontend403Url);
+						
 						echo '<p style="color:#666600">Changes are successfully saved.</p>';
 					}
 				}
@@ -231,7 +262,7 @@ class IP2LocationCountryBlocker {
 					echo '
 						<option value="' . $countryCode . '"' . ((in_array($countryCode, $frontendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
 				}
-
+				
 				echo '
 						</select>
 					</p>
@@ -240,7 +271,11 @@ class IP2LocationCountryBlocker {
 					</p>
 					<p>
 						<input type="radio" name="frontendOption" value="1" id="frontendOption-1"' . (($frontendOption == 1) ? ' checked' : '') . '>
-						<label for="frontendOption-1"> Page Error 403: Access Denied</label>
+						<label for="frontendOption-1"> Error 403: Access Denied</label>
+						<div style="margin-left:20px;">
+							<label for="fronendOption-1">403 Error Page:</label>
+							' . $frontend_page_dropdown . '
+						</div>
 						<br />
 						<input type="radio" name="frontendOption" value="2" id="frontendOption-2"' . (($frontendOption == 2) ? ' checked' : '') . '>
 						<label for="frontendOption-2"> URL: </label>
@@ -269,6 +304,8 @@ class IP2LocationCountryBlocker {
 						update_option('icb_backend_option', $backendOption);
 						update_option('icb_backend_target', $backendTarget);
 
+						update_option('icb_backend_403_url', $backend403Url);
+						
 						echo '<p style="color:#666600">Changes are successfully saved.</p>';
 					}
 				}
@@ -298,7 +335,11 @@ class IP2LocationCountryBlocker {
 					</p>
 					<p>
 						<input type="radio" name="backendOption" value="1" id="backendOption-1"' . (($backendOption == 1) ? ' checked' : '') . '>
-						<label for="backendOption-1"> Page Error 403: Access Denied</label>
+						<label for="backendOption-1"> Error 403: Access Denied</label>
+						<div style="margin-left:20px;">
+							<label for="backendOption-1">403 Error Page:</label>
+							' . $backend_page_dropdown . '
+						</div>
 						<br />
 						<input type="radio" name="backendOption" value="2" id="backendOption-2"' . (($backendOption == 2) ? ' checked' : '') . '>
 						<label for="backendOption-2"> URL: </label>
@@ -314,29 +355,47 @@ class IP2LocationCountryBlocker {
 	}
 
 	function check(){
-		$ipAddress = $_SERVER['REMOTE_ADDR'];
-
-		if(isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && filter_var($_SERVER["HTTP_X_FORWARDED_FOR"], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)){
-			$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-		}
-
-		$result = IP2LocationCountryBlocker::get_location($ipAddress);
-
-		// Backend
-		if((preg_match('/\/wp-login.php/i', $_SERVER['REQUEST_URI']) || is_admin())){
-			$banlist = get_option('icb_backend_banlist');
-
-			if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
-				if(get_option('icb_backend_option') == 1) IP2LocationCountryBlocker::page_403();
-				IP2LocationCountryBlocker::page_301(get_option('icb_backend_target'));
-			}
+		//get frontend and backend url
+		$frontend403Url = get_option('icb_frontend_403_url');
+		if ($frontend403Url == "") $frontend403Url = "default";
+		$backend403Url = get_option('icb_backend_403_url');
+		if ($backend403Url == "") $backend403Url = "default";
+		
+		if ($frontend403Url == get_permalink() || $backend403Url == get_permalink()){
+			//do no checking
 		}
 		else{
-			$banlist = get_option('icb_frontend_banlist');
+			//force test
+			$ipAddress = $_SERVER['REMOTE_ADDR'];
+			if(isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && filter_var($_SERVER["HTTP_X_FORWARDED_FOR"], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)){
+				$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+			}
 
-			if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
-				if(get_option('icb_frontend_option') == 1) IP2LocationCountryBlocker::page_403();
-				IP2LocationCountryBlocker::page_301(get_option('icb_frontend_target'));
+			$result = IP2LocationCountryBlocker::get_location($ipAddress);
+			
+			// Backend
+			if((preg_match('/\/wp-login.php/i', $_SERVER['REQUEST_URI']) || is_admin())){
+				$banlist = get_option('icb_backend_banlist');
+				if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
+					if(get_option('icb_backend_option') == 1) {					
+						IP2LocationCountryBlocker::page_403($backend403Url);
+					}
+					else{
+						IP2LocationCountryBlocker::page_301(get_option('icb_backend_target'));
+					}
+				}
+			}
+			else{
+				$banlist = get_option('icb_frontend_banlist');
+				
+				if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
+					if(get_option('icb_frontend_option') == 1){
+						IP2LocationCountryBlocker::page_403($frontend403Url);
+					}
+					else{
+						IP2LocationCountryBlocker::page_301(get_option('icb_frontend_target'));
+					}
+				}
 			}
 		}
 	}
@@ -352,32 +411,33 @@ class IP2LocationCountryBlocker {
 		die;
 	}
 
-	function page_403(){
-		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
-		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-		header('Cache-Control: no-store, no-cache, must-revalidate');
-		header('Cache-Control: post-check=0, pre-check=0', false);
-		header('Pragma: no-cache');
-		header('HTTP/1.1 403 Forbidden');
-
-		die('<html>
-<head>
-<meta http-equiv="content-type" content="text/html;charset=utf-8">
-<title>Error 404 Not Found</title>
-<style>
-<!--
-	body {font-family: arial,sans-serif}
-	img { border:none; }
-//-->
-</style>
-</head>
-<body>
-	<h2>Error 403 Access Denied</h2>
-	<p>
-		You don\'t have permission to access pages on this server.
-	</p>
-</body>
-</html>');
+	function page_403($url){
+		if ($url == "default" || $url == ""){
+					die('<html>
+			<head>
+			<meta http-equiv="content-type" content="text/html;charset=utf-8">
+			<title>Error 403 Access Denied</title>
+			<style>
+			<!--
+				body {font-family: arial,sans-serif}
+				img { border:none; }
+			//-->
+			</style>
+			</head>
+			<body>
+				<div style="margin:10px; padding:10px; border:1px solid #f00; background-color:#fcc;">
+				<h2>Error 403 Access Denied</h2>
+				<div>
+				You do not have permission to access the page on this server.
+				</div>
+				</div>
+			</body>
+			</html>');
+		}
+		else{
+			//perform redirection
+			header('Location: ' . $url);
+		}
 	}
 
 	function load_jquery() {
@@ -414,6 +474,9 @@ class IP2LocationCountryBlocker {
 		update_option('icb_backend_option', 1);
 		update_option('icb_frontend_target', '');
 		update_option('icb_backend_target', '');
+		//Support custom 403 page
+		update_option('icb_frontend_403_url', 'default');
+		update_option('icb_backend_403_url', 'default');
 	}
 
 	function uninstall(){
@@ -426,6 +489,9 @@ class IP2LocationCountryBlocker {
 		delete_option('icb_backend_option');
 		delete_option('icb_frontend_target');
 		delete_option('icb_backend_target');
+		//Support custom 403 page
+		delete_option('icb_frontend_403_url');
+		delete_option('icb_backend_403_url');
 	}
 
 	function get_location($ip){
