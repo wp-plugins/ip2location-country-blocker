@@ -59,8 +59,9 @@ Send us email at support@ip2location.com
 
 == Changelog ==
 
-1.1 Added dropdown selection for product code.
-1.2 Allow user to custom their own error page.
+* 1.1 Added dropdown selection for product code.
+* 1.2 Allow user to custom their own error page.
+* 1.3 Move the configuration page to settings, to alleviate the confusion of setting page location.
 
 
 == Installation ==
