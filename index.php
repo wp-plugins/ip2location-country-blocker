@@ -3,7 +3,7 @@
 Plugin Name: IP2Location Country Blocker
 Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
 Description: Block visitors from accessing your website or admin area by their country.
-Version: 1.3
+Version: 1.4
 Author: IP2Location
 Author URI: http://www.ip2location.com
 */
@@ -131,7 +131,7 @@ class IP2LocationCountryBlocker {
 					
 					<div style="margin-top:20px;">
 						Note: If you failed to download the BIN database using this automated downloading tool, please follow the below procedures to manually update the database.
-						<ol style="list-style-type:circle;margin-left:20px">
+						<ol style="list-style-type:circle;margin-left:30px">
 							<li>Download the BIN database at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.</li>
 							<li>Decompress the zip file and rename the BIN database to <b>database.bin</b>.</li>
 							<li>Upload <b>database.bin</b> to /wp-content/plugins/ip2location-country-blocker/.</li>
@@ -147,7 +147,9 @@ class IP2LocationCountryBlocker {
 			echo '
 				<p>&nbsp;</p>
 				<a name="ip-query"></a>
-				<h3>Query IP</h3>
+				<div style="border-bottom:1px solid #ccc;">
+					<h3>Query IP</h3>
+				</div>
 				<p>
 					Enter a valid IP address for checking.
 				</p>';
@@ -188,6 +190,9 @@ class IP2LocationCountryBlocker {
 			$frontend403Url = (isset($_POST['frontend403Url'])) ? $_POST['frontend403Url'] : get_option('icb_frontend_403_url');
 			$backend403Url = (isset($_POST['backend403Url'])) ? $_POST['backend403Url'] : get_option('icb_backend_403_url');
 			
+			//add email notification
+			$emailNotification = (isset($_POST['emailNotification'])) ? $_POST['emailNotification'] : get_option('icb_email_notification');
+			
 			//Get all pages for display into a dropdown list (frontend)
 			$frontend_page_dropdown = '<select name="frontend403Url">';
 			$frontend_page_dropdown .= '<option value="default">default</option>';
@@ -224,8 +229,9 @@ class IP2LocationCountryBlocker {
 				<p>&nbsp;</p>
 
 				<a name="frontend-block-list"></a>
-				<h3>Frontend Block List</h3>';
-
+				<div style="border-bottom:1px solid #ccc;">
+				<h3>Frontend Block List</h3></div>';
+				
 				if(isset($_POST['saveFrontend'])){
 					if(!empty($frontendTarget) && !filter_var($frontendTarget, FILTER_VALIDATE_URL)){
 						echo '<p style="color:#cc0000">Invalid URL provided.</p>';
@@ -266,13 +272,13 @@ class IP2LocationCountryBlocker {
 				echo '
 						</select>
 					</p>
-					<p>
+					<p style="font-weight:bold;">
 						Show the following page when visitor is blocked.
 					</p>
-					<p>
+					<div style="margin-left:30px;">
 						<input type="radio" name="frontendOption" value="1" id="frontendOption-1"' . (($frontendOption == 1) ? ' checked' : '') . '>
 						<label for="frontendOption-1"> Error 403: Access Denied</label>
-						<div style="margin-left:20px;">
+						<div style="margin-left:30px;">
 							<label for="fronendOption-1">403 Error Page:</label>
 							' . $frontend_page_dropdown . '
 						</div>
@@ -280,16 +286,17 @@ class IP2LocationCountryBlocker {
 						<input type="radio" name="frontendOption" value="2" id="frontendOption-2"' . (($frontendOption == 2) ? ' checked' : '') . '>
 						<label for="frontendOption-2"> URL: </label>
 						<input type="text" name="frontendTarget" value="' . $frontendTarget . '" size="80" onfocus="document.getElementById(\'frontendOption-2\').checked=true;" />
-					</p>
+					</div>
 					<p>
-						<input type="submit" name="saveFrontend" value="Save" />
+						<input type="submit" name="saveFrontend" value="Save Frontend Settings" />
 					</p>
 				</form>
 
 				<p>&nbsp;</p>
 
 				<a name="backend-block-list"></a>
-				<h3>Backend (Admin Area) Block List</h3>';
+				<div style="border-bottom:1px solid #ccc;">
+				<h3>Backend (Admin Area) Block List</h3></div>';
 
 				if(isset($_POST['saveBackend'])){
 					if(!empty($backendTarget) && !filter_var($backendTarget, FILTER_VALIDATE_URL)){
@@ -305,6 +312,7 @@ class IP2LocationCountryBlocker {
 						update_option('icb_backend_target', $backendTarget);
 
 						update_option('icb_backend_403_url', $backend403Url);
+						update_option('icb_email_notification', $emailNotification);
 						
 						echo '<p style="color:#666600">Changes are successfully saved.</p>';
 					}
@@ -327,16 +335,17 @@ class IP2LocationCountryBlocker {
 						<option value="' . $countryCode . '"' . ((in_array($countryCode, $backendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
 				}
 
+				echo '</select>';
+						
 				echo '
-						</select>
 					</p>
-					<p>
+					<p style="font-weight:bold;">
 						Show the following page when visitor is blocked.
 					</p>
-					<p>
+					<div style="margin-left:30px;">
 						<input type="radio" name="backendOption" value="1" id="backendOption-1"' . (($backendOption == 1) ? ' checked' : '') . '>
 						<label for="backendOption-1"> Error 403: Access Denied</label>
-						<div style="margin-left:20px;">
+						<div style="margin-left:30px;">
 							<label for="backendOption-1">403 Error Page:</label>
 							' . $backend_page_dropdown . '
 						</div>
@@ -344,9 +353,24 @@ class IP2LocationCountryBlocker {
 						<input type="radio" name="backendOption" value="2" id="backendOption-2"' . (($backendOption == 2) ? ' checked' : '') . '>
 						<label for="backendOption-2"> URL: </label>
 						<input type="text" name="backendTarget" value="' . $backendTarget . '" size="80" onfocus="document.getElementById(\'backendOption-2\').checked=true;" />
-					</p>
+					</div>';
+					
+				/////
+				//Get the user email address for notification
+				echo '<p style="font-weight:bold;">Send email notification to: <select name="emailNotification">';
+				echo '<option value="none">none</option>';
+				$blogusers = get_users('search=*');
+				foreach ($blogusers as $user) {
+					if ($user->user_email == $emailNotification)
+						echo '<option value="' . $user->user_email . '" selected="selected">' . $user->display_name . '</option>';
+					else
+						echo '<option value="' . $user->user_email . '">' . $user->display_name . '</option>';
+				}
+				echo '</select></p>';
+				
+				echo '
 					<p>
-						<input type="submit" name="saveBackend" value="Save" />
+						<input type="submit" name="saveBackend" value="Save Backend Settings" />
 					</p>
 				</form>
 
@@ -365,7 +389,6 @@ class IP2LocationCountryBlocker {
 			//do no checking
 		}
 		else{
-			//force test
 			$ipAddress = $_SERVER['REMOTE_ADDR'];
 			if(isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && filter_var($_SERVER["HTTP_X_FORWARDED_FOR"], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)){
 				$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
@@ -377,6 +400,14 @@ class IP2LocationCountryBlocker {
 			if((preg_match('/\/wp-login.php/i', $_SERVER['REQUEST_URI']) || is_admin())){
 				$banlist = get_option('icb_backend_banlist');
 				if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
+					//Trigger email notification if enabled
+					$email_notification_address = get_option('icb_email_notification');
+					if ($email_notification_address != "none"){
+						$subject = "Wordpress Admin Page Access Alert";
+						$message = "Someone from " . $result['countryCode'] . " (IP Address: " . $ipAddress . ") is trying to access your admin page.";
+						wp_mail($email_notification_address, $subject, $message);
+					}
+					
 					if(get_option('icb_backend_option') == 1) {					
 						IP2LocationCountryBlocker::page_403($backend403Url);
 					}
@@ -386,6 +417,7 @@ class IP2LocationCountryBlocker {
 				}
 			}
 			else{
+				// Frontend
 				$banlist = get_option('icb_frontend_banlist');
 				
 				if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
@@ -477,6 +509,7 @@ class IP2LocationCountryBlocker {
 		//Support custom 403 page
 		update_option('icb_frontend_403_url', 'default');
 		update_option('icb_backend_403_url', 'default');
+		update_option('icb_email_notification', 'none');
 	}
 
 	function uninstall(){
@@ -492,6 +525,7 @@ class IP2LocationCountryBlocker {
 		//Support custom 403 page
 		delete_option('icb_frontend_403_url');
 		delete_option('icb_backend_403_url');
+		delete_option('icb_email_notification');
 	}
 
 	function get_location($ip){

@@ -12,7 +12,12 @@ Description: IP2Location Country Blocker allows user to block visitors from acce
 
 IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country.  
 
-In addition, this plugin also allows you to redirect the users to a predefined page based on countries.  
+Key Features  
+* Allow you to redirect the users to a predefined page based on countries.
+* Allow you to block multiple countries.
+* Built with default 403 error page.
+* Allow you to customize the 403 error page for each frontend and backend page.
+* Support email notification if an user from blocked countries list was trying to access your admin page.
 
 This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database. Moreover, IP2Location provides monthly BIN update for your download, so that you could have the latest and accurate query results.
 
@@ -46,6 +51,9 @@ Yes, you can use the default 403 provided in this plugin.
 = Can I custom my own error page? =
 Yes, you can create a new page on wordpress and design your own error display. Once completed, you can mark your error page as "private" and configure the error redirection at the setting page.
 
+= Can I configure email notification if user was trying to access my admin page? =
+Yes, you can configure email notification if an user from blocked countries list was trying to access your admin page.
+
 = Unable to find your answer here? =
 Send us email at support@ip2location.com
 
@@ -62,6 +70,7 @@ Send us email at support@ip2location.com
 * 1.1 Added dropdown selection for product code.
 * 1.2 Allow user to custom their own error page.
 * 1.3 Move the configuration page to settings, to alleviate the confusion of setting page location.
+* 1.4 Send email notification if an user from blocked countries was trying to access your backend page.
 
 
 == Installation ==
