@@ -3,7 +3,7 @@
 Plugin Name: IP2Location Country Blocker
 Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
 Description: Block visitors from accessing your website or admin area by their country.
-Version: 1.4
+Version: 1.5.0
 Author: IP2Location
 Author URI: http://www.ip2location.com
 */
@@ -193,6 +193,9 @@ class IP2LocationCountryBlocker {
 			//add email notification
 			$emailNotification = (isset($_POST['emailNotification'])) ? $_POST['emailNotification'] : get_option('icb_email_notification');
 			
+			//backend validation bypass secret code
+			$backendBypassSecretCode = (isset($_POST['backendBypassSecretCode'])) ? $_POST['backendBypassSecretCode'] : get_option('icb_backend_bypass_secret_code');
+			
 			//Get all pages for display into a dropdown list (frontend)
 			$frontend_page_dropdown = '<select name="frontend403Url">';
 			$frontend_page_dropdown .= '<option value="default">default</option>';
@@ -313,6 +316,7 @@ class IP2LocationCountryBlocker {
 
 						update_option('icb_backend_403_url', $backend403Url);
 						update_option('icb_email_notification', $emailNotification);
+						update_option('icb_backend_bypass_secret_code', $backendBypassSecretCode);
 						
 						echo '<p style="color:#666600">Changes are successfully saved.</p>';
 					}
@@ -368,6 +372,13 @@ class IP2LocationCountryBlocker {
 				}
 				echo '</select></p>';
 				
+				////
+				// Add secret code for validation bypass
+				echo '<p style="font-weight:bold;">Secret code to bypass validation (max 20 chars): <input type="text" name="backendBypassSecretCode" maxlength="20" value="' . $backendBypassSecretCode . '" /><br/>';
+				echo '<span style="font-size:9px;">To bypass the validation, append the secret_code with value to wp-login.php page. For example, http://www.example.com/wp-login.php?secret_code=1234567</span>';
+				echo '</p>';
+				
+				
 				echo '
 					<p>
 						<input type="submit" name="saveBackend" value="Save Backend Settings" />
@@ -398,21 +409,30 @@ class IP2LocationCountryBlocker {
 			
 			// Backend
 			if((preg_match('/\/wp-login.php/i', $_SERVER['REQUEST_URI']) || is_admin())){
-				$banlist = get_option('icb_backend_banlist');
-				if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
-					//Trigger email notification if enabled
-					$email_notification_address = get_option('icb_email_notification');
-					if ($email_notification_address != "none"){
-						$subject = "Wordpress Admin Page Access Alert";
-						$message = "Someone from " . $result['countryCode'] . " (IP Address: " . $ipAddress . ") is trying to access your admin page.";
-						wp_mail($email_notification_address, $subject, $message);
-					}
-					
-					if(get_option('icb_backend_option') == 1) {					
-						IP2LocationCountryBlocker::page_403($backend403Url);
-					}
-					else{
-						IP2LocationCountryBlocker::page_301(get_option('icb_backend_target'));
+				$secret_code = isset($_GET['secret_code'])? $_GET['secret_code'] : '';
+				$stored_bypass_backend_secret_code = get_option('icb_backend_bypass_secret_code');
+				
+				if ($stored_bypass_backend_secret_code != '' && $secret_code != '' && $stored_bypass_backend_secret_code == $secret_code){
+					//bypass validation check
+				}
+				else{
+					//perform backend validation check
+					$banlist = get_option('icb_backend_banlist');
+					if(is_array($banlist) && in_array($result['countryCode'], $banlist)){
+						//Trigger email notification if enabled
+						$email_notification_address = get_option('icb_email_notification');
+						if ($email_notification_address != "none"){
+							$subject = "Wordpress Admin Page Access Alert";
+							$message = "Someone from " . $result['countryCode'] . " (IP Address: " . $ipAddress . ") is trying to access your admin page.";
+							wp_mail($email_notification_address, $subject, $message);
+						}
+						
+						if(get_option('icb_backend_option') == 1) {					
+							IP2LocationCountryBlocker::page_403($backend403Url);
+						}
+						else{
+							IP2LocationCountryBlocker::page_301(get_option('icb_backend_target'));
+						}
 					}
 				}
 			}
@@ -510,6 +530,7 @@ class IP2LocationCountryBlocker {
 		update_option('icb_frontend_403_url', 'default');
 		update_option('icb_backend_403_url', 'default');
 		update_option('icb_email_notification', 'none');
+		update_option('icb_backend_bypass_secret_code', '');
 	}
 
 	function uninstall(){
@@ -526,6 +547,7 @@ class IP2LocationCountryBlocker {
 		delete_option('icb_frontend_403_url');
 		delete_option('icb_backend_403_url');
 		delete_option('icb_email_notification');
+		delete_option('icb_backend_bypass_secret_code');
 	}
 
 	function get_location($ip){
