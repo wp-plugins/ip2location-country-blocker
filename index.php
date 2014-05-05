@@ -3,7 +3,7 @@
 Plugin Name: IP2Location Country Blocker
 Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
 Description: Block visitors from accessing your website or admin area by their country.
-Version: 1.5.0
+Version: 1.6.0
 Author: IP2Location
 Author URI: http://www.ip2location.com
 */
@@ -422,8 +422,29 @@ class IP2LocationCountryBlocker {
 						//Trigger email notification if enabled
 						$email_notification_address = get_option('icb_email_notification');
 						if ($email_notification_address != "none"){
-							$subject = "Wordpress Admin Page Access Alert";
-							$message = "Someone from " . $result['countryCode'] . " (IP Address: " . $ipAddress . ") is trying to access your admin page.";
+							$subject = "IP2Location Country Blocker Alert";
+							$message = "Hi,
+IP2Location Country Blocker has successfully blocked an user from accessing your admin page. The user's details:
+
+IP Address: " . $ipAddress . "
+Country Name: " . $result['countryName'] . "
+Country Code: " . $result['countryCode'] . "
+Region Name: " . $result['regionName'] . "
+City Name: " . $result['cityName'] . "
+Latitude: " . $result['latitude'] . "
+Longitude: " . $result['longitude'] . "
+ZIP Code: " . $result['zipCode'] . "
+Time Zone: " . $result['timeZone'] . "
+
+------------------------------------------------------------------------------------------------------
+Get a free IP2Location LITE database at http://lite.ip2location.com .
+Get an accurate IP2Location commercial database at http://www.ip2location.com .
+------------------------------------------------------------------------------------------------------
+
+Regards,
+IP2Location Country Blocker
+www.ip2location.com";
+							
 							wp_mail($email_notification_address, $subject, $message);
 						}
 						
@@ -562,7 +583,15 @@ class IP2LocationCountryBlocker {
 		// Get geolocation by IP address
 		$result = $geo->lookup($ip);
 		
-		return array('countryCode'=>$result->countryCode, 'countryName'=>IP2LocationCountryBlocker::set_case($result->countryName));
+		return array('countryCode'=>$result->countryCode, 
+					 'countryName'=>IP2LocationCountryBlocker::set_case($result->countryName),
+					 'regionName'=>IP2LocationCountryBlocker::set_case($result->regionName),
+					 'cityName'=>IP2LocationCountryBlocker::set_case($result->cityName),
+					 'latitude'=>$result->latitude,
+					 'longitude'=>$result->longitude,
+					 'zipCode'=>$result->zipCode,
+					 'timeZone'=>$result->timeZone
+					 );
 	}
 
 	function list_countries(){

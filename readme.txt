@@ -63,6 +63,7 @@ Send us email at support@ip2location.com
 2. **Frontend blocking** - Select countries that you would like to block from accessing your blog pages. Page redirection supported.
 3. **Backend blocking** - Select countries that you would like to block the visitors from accessing your admin area (wp-login) page. Page redirection supported.
 4. **Custom error page** - Custom your own error page to suit your wordpress theme.
+5. **Email Alert** - Notify you with details when an user was trying to access your admin page.
 
 
 == Changelog ==
@@ -72,6 +73,7 @@ Send us email at support@ip2location.com
 * 1.3.0 Move the configuration page to settings, to alleviate the confusion of setting page location.
 * 1.4.0 Send email notification if an user from blocked countries was trying to access your backend page.
 * 1.5.0 Support secret code to bypass backend validation.
+* 1.6.0 Added user details in the email alert message.
 
 
 == Installation ==
