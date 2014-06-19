@@ -4,20 +4,20 @@ Donate link: http://www.ip2location.com
 Tags: country blocker, targeted content, geolocation
 Requires at least: 2.0
 Tested up to: 3.9
-Stable tag: 1.0
+Stable tag: 1.7
 
 Description: IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country.
 
 == Description ==
 
-IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country.  
+IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country.
 
-Key Features  
-* Allow you to redirect the users to a predefined page based on countries.  
-* Allow you to block multiple countries.  
-* Built with default 403 error page.  
-* Allow you to customize the 403 error page for each frontend and backend page.  
-* Support email notification if an user from blocked countries list was trying to access your admin page.  
+Key Features
+* Allow you to redirect the users to a predefined page based on countries.
+* Allow you to block multiple countries.
+* Built with default 403 error page.
+* Allow you to customize the 403 error page for each frontend and backend page.
+* Support email notification if an user from blocked countries list was trying to access your admin page.
 
 This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database. Moreover, IP2Location provides monthly BIN update for your download, so that you could have the latest and accurate query results.
 
@@ -74,6 +74,7 @@ Send us email at support@ip2location.com
 * 1.4.0 Send email notification if an user from blocked countries was trying to access your backend page.
 * 1.5.0 Support secret code to bypass backend validation.
 * 1.6.0 Added user details in the email alert message.
+* 1.7.0 Fixed download script errors.
 
 
 == Installation ==
