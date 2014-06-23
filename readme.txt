@@ -79,7 +79,7 @@ Send us email at support@ip2location.com
 
 == Installation ==
 
-1. Create `ip2location` folder in the `/wp-content/plugins/` directory.
-1. Upload `database.bin` to `/wp-content/ip2location/` directory.
+1. Create `ip2location-country-blocker` folder in the `/wp-content/plugins/` directory.
+1. Upload `database.bin` to `/wp-content/ip2location-country-blocker/` directory.
 1. Activate the plugin through the 'Plugins' menu in WordPress.
 1. You can now start using IP2Location Country Blocker to block visitors.
