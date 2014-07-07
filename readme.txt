@@ -4,7 +4,7 @@ Donate link: http://www.ip2location.com
 Tags: country blocker, targeted content, geolocation
 Requires at least: 2.0
 Tested up to: 3.9
-Stable tag: 1.7
+Stable tag: 1.8
 
 Description: IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country.
 
@@ -75,6 +75,7 @@ Send us email at support@ip2location.com
 * 1.5.0 Support secret code to bypass backend validation.
 * 1.6.0 Added user details in the email alert message.
 * 1.7.0 Fixed download script errors.
+* 1.8.0 Fixed the country display issue: South Georgia And The South Sandwich Islands
 
 
 == Installation ==

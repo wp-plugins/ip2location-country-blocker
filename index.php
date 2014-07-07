@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -756,7 +756,7 @@ www.ip2location.com";
 			'SB' => 'Solomon Islands',
 			'SO' => 'Somalia',
 			'ZA' => 'South Africa',
-			'GS' => 'South Georgia &amp=> South Sandwich Islands',
+			'GS' => 'South Georgia And The South Sandwich Islands',
 			'ES' => 'Spain',
 			'LK' => 'Sri Lanka',
 			'SH' => 'St. Helena',
