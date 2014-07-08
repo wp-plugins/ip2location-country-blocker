@@ -1,0 +1,1 @@
+If this file exists, it means you are using the default sample bin database.

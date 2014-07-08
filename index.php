@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 1.8.0
+ * Version: 1.9.0
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -16,6 +16,7 @@ array_pop($parts);
 // Change the DB location to the same folder as plugin
 // define('IP2LOCATION_DB', implode(DS, $parts) . DS . 'ip2location' . DS);
 define('IP2LOCATION_DB', substr(plugin_dir_path(__FILE__), 0, -1) . DS . "database.bin");
+define('DEFAULT_SAMPLE_BIN', substr(plugin_dir_path(__FILE__), 0, -1) . DS . "default_sample_bin.txt");
 
 add_action('wp_ajax_download_db', 'ip2location_download_db');
 
@@ -41,17 +42,29 @@ class IP2LocationCountryBlocker {
 					Unable to find the IP2Location BIN database! Please download the database at at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.
 				</div>';
 			}else {
-				echo '
-				<p>
-					<b>Current Database Version: </b>
-					' . date('F Y', filemtime(IP2LOCATION_DB)) . '
-				</p>';
-
-				if(filemtime(IP2LOCATION_DB) < strtotime('-2 months')) {
+				if (file_exists(DEFAULT_SAMPLE_BIN)){
+					//Still using the sample old BIN
 					echo '
+					<p>
+						<b>Current Database Version: </b>
+					</p>
 					<p style="border:1px solid #f00;background:#faa;padding:10px">
 						<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
+					</p>';					
+				}
+				else{
+					echo '
+					<p>
+						<b>Current Database Version: </b>
+						' . date('F Y', filemtime(IP2LOCATION_DB)) . '
 					</p>';
+
+					if(filemtime(IP2LOCATION_DB) < strtotime('-2 months')) {
+						echo '
+						<p style="border:1px solid #f00;background:#faa;padding:10px">
+							<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
+						</p>';
+					}
 				}
 			}
 			// database update
@@ -842,6 +855,11 @@ function ip2location_download_db() {
 					$whandle = fopen(WP_PLUGIN_DIR . "/" . dirname (plugin_basename (__FILE__)) . "/database.bin", 'w+');
 					fwrite($whandle, zip_entry_read($zip_entry, $file_size));
 					fclose($whandle);
+					
+					//remove the default sample file upon successfully download the latest copy.
+					if (file_exists(DEFAULT_SAMPLE_BIN))
+						unlink(DEFAULT_SAMPLE_BIN);
+						
 					// success
 					$found = true;
 				}
