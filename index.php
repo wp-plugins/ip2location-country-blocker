@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 1.9.0
+ * Version: 1.9.1
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -21,6 +21,247 @@ define('DEFAULT_SAMPLE_BIN', substr(plugin_dir_path(__FILE__), 0, -1) . DS . "de
 add_action('wp_ajax_download_db', 'ip2location_download_db');
 
 class IP2LocationCountryBlocker {
+	var $countries = array(
+		'AF' => 'Afghanistan',
+		'AL' => 'Albania',
+		'DZ' => 'Algeria',
+		'AS' => 'American Samoa',
+		'AD' => 'Andorra',
+		'AO' => 'Angola',
+		'AI' => 'Anguilla',
+		'AQ' => 'Antarctica',
+		'AG' => 'Antigua and Barbuda',
+		'AR' => 'Argentina',
+		'AM' => 'Armenia',
+		'AW' => 'Aruba',
+		'AU' => 'Australia',
+		'AT' => 'Austria',
+		'AZ' => 'Azerbaijan',
+		'BS' => 'Bahamas',
+		'BH' => 'Bahrain',
+		'BD' => 'Bangladesh',
+		'BB' => 'Barbados',
+		'BY' => 'Belarus',
+		'BE' => 'Belgium',
+		'BZ' => 'Belize',
+		'BJ' => 'Benin',
+		'BM' => 'Bermuda',
+		'BT' => 'Bhutan',
+		'BO' => 'Bolivia',
+		'BA' => 'Bosnia and Herzegovina',
+		'BW' => 'Botswana',
+		'BV' => 'Bouvet Island',
+		'BR' => 'Brazil',
+		'IO' => 'British Indian Ocean Territory',
+		'BN' => 'Brunei Darussalam',
+		'BG' => 'Bulgaria',
+		'BF' => 'Burkina Faso',
+		'BI' => 'Burundi',
+		'KH' => 'Cambodia',
+		'CM' => 'Cameroon',
+		'CA' => 'Canada',
+		'CV' => 'Cape Verde',
+		'KY' => 'Cayman Islands',
+		'CF' => 'Central African Republic',
+		'TD' => 'Chad',
+		'CL' => 'Chile',
+		'CN' => 'China',
+		'CX' => 'Christmas Island',
+		'CC' => 'Cocos (Keeling) Islands',
+		'CO' => 'Colombia',
+		'KM' => 'Comoros',
+		'CG' => 'Congo',
+		'CK' => 'Cook Islands',
+		'CR' => 'Costa Rica',
+		'CI' => 'Cote D\'Ivoire',
+		'HR' => 'Croatia',
+		'CU' => 'Cuba',
+		'CY' => 'Cyprus',
+		'CZ' => 'Czech Republic',
+		'CD' => 'Democratic Republic of Congo',
+		'DK' => 'Denmark',
+		'DJ' => 'Djibouti',
+		'DM' => 'Dominica',
+		'DO' => 'Dominican Republic',
+		'TP' => 'East Timor',
+		'EC' => 'Ecuador',
+		'EG' => 'Egypt',
+		'SV' => 'El Salvador',
+		'GQ' => 'Equatorial Guinea',
+		'ER' => 'Eritrea',
+		'EE' => 'Estonia',
+		'ET' => 'Ethiopia',
+		'FK' => 'Falkland Islands (Malvinas)',
+		'FO' => 'Faroe Islands',
+		'FJ' => 'Fiji',
+		'FI' => 'Finland',
+		'FR' => 'France',
+		'FX' => 'France, Metropolitan',
+		'GF' => 'French Guiana',
+		'PF' => 'French Polynesia',
+		'TF' => 'French Southern Territories',
+		'GA' => 'Gabon',
+		'GM' => 'Gambia',
+		'GE' => 'Georgia',
+		'DE' => 'Germany',
+		'GH' => 'Ghana',
+		'GI' => 'Gibraltar',
+		'GR' => 'Greece',
+		'GL' => 'Greenland',
+		'GD' => 'Grenada',
+		'GP' => 'Guadeloupe',
+		'GU' => 'Guam',
+		'GT' => 'Guatemala',
+		'GN' => 'Guinea',
+		'GW' => 'Guinea-bissau',
+		'GY' => 'Guyana',
+		'HT' => 'Haiti',
+		'HM' => 'Heard and Mc Donald Islands',
+		'HN' => 'Honduras',
+		'HK' => 'Hong Kong',
+		'HU' => 'Hungary',
+		'IS' => 'Iceland',
+		'IN' => 'India',
+		'ID' => 'Indonesia',
+		'IR' => 'Iran (Islamic Republic of)',
+		'IQ' => 'Iraq',
+		'IE' => 'Ireland',
+		'IL' => 'Israel',
+		'IT' => 'Italy',
+		'JM' => 'Jamaica',
+		'JP' => 'Japan',
+		'JO' => 'Jordan',
+		'KZ' => 'Kazakhstan',
+		'KE' => 'Kenya',
+		'KI' => 'Kiribati',
+		'KR' => 'Korea, Republic of',
+		'KW' => 'Kuwait',
+		'KG' => 'Kyrgyzstan',
+		'LA' => 'Lao People\'s Democratic Republic',
+		'LV' => 'Latvia',
+		'LB' => 'Lebanon',
+		'LS' => 'Lesotho',
+		'LR' => 'Liberia',
+		'LY' => 'Libyan Arab Jamahiriya',
+		'LI' => 'Liechtenstein',
+		'LT' => 'Lithuania',
+		'LU' => 'Luxembourg',
+		'MO' => 'Macau',
+		'MK' => 'Macedonia',
+		'MG' => 'Madagascar',
+		'MW' => 'Malawi',
+		'MY' => 'Malaysia',
+		'MV' => 'Maldives',
+		'ML' => 'Mali',
+		'MT' => 'Malta',
+		'MH' => 'Marshall Islands',
+		'MQ' => 'Martinique',
+		'MR' => 'Mauritania',
+		'MU' => 'Mauritius',
+		'YT' => 'Mayotte',
+		'MX' => 'Mexico',
+		'FM' => 'Micronesia, Federated States of',
+		'MD' => 'Moldova, Republic of',
+		'MC' => 'Monaco',
+		'MN' => 'Mongolia',
+		'MS' => 'Montserrat',
+		'MA' => 'Morocco',
+		'MZ' => 'Mozambique',
+		'MM' => 'Myanmar',
+		'NA' => 'Namibia',
+		'NR' => 'Nauru',
+		'NP' => 'Nepal',
+		'NL' => 'Netherlands',
+		'AN' => 'Netherlands Antilles',
+		'NC' => 'New Caledonia',
+		'NZ' => 'New Zealand',
+		'NI' => 'Nicaragua',
+		'NE' => 'Niger',
+		'NG' => 'Nigeria',
+		'NU' => 'Niue',
+		'NF' => 'Norfolk Island',
+		'KP' => 'North Korea',
+		'MP' => 'Northern Mariana Islands',
+		'NO' => 'Norway',
+		'OM' => 'Oman',
+		'PK' => 'Pakistan',
+		'PW' => 'Palau',
+		'PA' => 'Panama',
+		'PG' => 'Papua New Guinea',
+		'PY' => 'Paraguay',
+		'PE' => 'Peru',
+		'PH' => 'Philippines',
+		'PN' => 'Pitcairn',
+		'PL' => 'Poland',
+		'PT' => 'Portugal',
+		'PR' => 'Puerto Rico',
+		'QA' => 'Qatar',
+		'RE' => 'Reunion',
+		'RO' => 'Romania',
+		'RU' => 'Russian Federation',
+		'RW' => 'Rwanda',
+		'KN' => 'Saint Kitts and Nevis',
+		'LC' => 'Saint Lucia',
+		'VC' => 'Saint Vincent and the Grenadines',
+		'WS' => 'Samoa',
+		'SM' => 'San Marino',
+		'ST' => 'Sao Tome and Principe',
+		'SA' => 'Saudi Arabia',
+		'SN' => 'Senegal',
+		'SC' => 'Seychelles',
+		'SL' => 'Sierra Leone',
+		'SG' => 'Singapore',
+		'SK' => 'Slovak Republic',
+		'SI' => 'Slovenia',
+		'SB' => 'Solomon Islands',
+		'SO' => 'Somalia',
+		'ZA' => 'South Africa',
+		'GS' => 'South Georgia And The South Sandwich Islands',
+		'ES' => 'Spain',
+		'LK' => 'Sri Lanka',
+		'SH' => 'St. Helena',
+		'PM' => 'St. Pierre and Miquelon',
+		'SD' => 'Sudan',
+		'SR' => 'Suriname',
+		'SJ' => 'Svalbard and Jan Mayen Islands',
+		'SZ' => 'Swaziland',
+		'SE' => 'Sweden',
+		'CH' => 'Switzerland',
+		'SY' => 'Syrian Arab Republic',
+		'TW' => 'Taiwan',
+		'TJ' => 'Tajikistan',
+		'TZ' => 'Tanzania, United Republic of',
+		'TH' => 'Thailand',
+		'TG' => 'Togo',
+		'TK' => 'Tokelau',
+		'TO' => 'Tonga',
+		'TT' => 'Trinidad and Tobago',
+		'TN' => 'Tunisia',
+		'TR' => 'Turkey',
+		'TM' => 'Turkmenistan',
+		'TC' => 'Turks and Caicos Islands',
+		'TV' => 'Tuvalu',
+		'UG' => 'Uganda',
+		'UA' => 'Ukraine',
+		'AE' => 'United Arab Emirates',
+		'GB' => 'United Kingdom',
+		'US' => 'United States',
+		'UM' => 'United States Minor Outlying Islands',
+		'UY' => 'Uruguay',
+		'UZ' => 'Uzbekistan',
+		'VU' => 'Vanuatu',
+		'VA' => 'Vatican City State (Holy See)',
+		'VE' => 'Venezuela',
+		'VN' => 'Viet Nam',
+		'VG' => 'Virgin Islands (British)',
+		'VI' => 'Virgin Islands (U.S.)',
+		'WF' => 'Wallis and Futuna Islands',
+		'EH' => 'Western Sahara',
+		'YE' => 'Yemen',
+		'YU' => 'Yugoslavia',
+		'ZM' => 'Zambia',
+		'ZW' => 'Zimbabwe'
+	);
 	function admin_options() {
 		if(is_admin()) {
 			// enable jquery
@@ -50,7 +291,7 @@ class IP2LocationCountryBlocker {
 					</p>
 					<p style="border:1px solid #f00;background:#faa;padding:10px">
 						<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
-					</p>';					
+					</p>';
 				}
 				else{
 					echo '
@@ -167,22 +408,25 @@ class IP2LocationCountryBlocker {
 					echo '<p style="color:#666600">IP address <b>' . $ipAddress . '</b> belongs to <b>' . $result['countryName'] . '</b>.</p>';
 
 					$banlist = get_option('icb_frontend_banlist');
-					if(is_array($banlist) && in_array($result['countryCode'], $banlist)) {
+					if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
 						echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your frontend website.</p>';
 					}
 
 					$banlist = get_option('icb_backend_banlist');
-					if(is_array($banlist) && in_array($result['countryCode'], $banlist)) {
+					if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
 						echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your backend website (admin area).</p>';
 					}
 				}
 			}
 
-			$countries = IP2LocationCountryBlocker::list_countries();
 			$frontendEnabled = (isset($_POST['saveFrontend']) && isset($_POST['frontendEnabled'])) ? 1 : (((isset($_POST['saveFrontend']) && !isset($_POST['frontendEnabled'])))? 0 : get_option('icb_frontend_enabled'));
 			$backendEnabled = (isset($_POST['saveBackend']) && isset($_POST['backendEnabled'])) ? 1 : (((isset($_POST['saveBackend']) && !isset($_POST['backendEnabled'])))? 0 : get_option('icb_backend_enabled'));
 			$frontendBanlist = (isset($_POST['frontendBanlist'])) ? $_POST['frontendBanlist'] : get_option('icb_frontend_banlist');
+			$frontendBanlist = (!is_array($frontendBanlist)) ? array($frontendBanlist) : $frontendBanlist;
+
 			$backendBanlist = (isset($_POST['backendBanlist'])) ? $_POST['backendBanlist'] : get_option('icb_backend_banlist');
+			$backendBanlist = (!is_array($backendBanlist)) ? array($backendBanlist) : $backendBanlist;
+
 			$frontendOption = (isset($_POST['frontendOption'])) ? $_POST['frontendOption'] : get_option('icb_frontend_option');
 			$backendOption = (isset($_POST['backendOption'])) ? $_POST['backendOption'] : get_option('icb_backend_option');
 			$frontendTarget = (isset($_POST['frontendTarget'])) ? $_POST['frontendTarget'] : get_option('icb_frontend_target');
@@ -249,6 +493,35 @@ class IP2LocationCountryBlocker {
 				}
 			}
 
+			if(isset($_POST['saveBackend'])) {
+				if(!empty($backendTarget) && !filter_var($backendTarget, FILTER_VALIDATE_URL)) {
+					echo '<p style="color:#cc0000">Invalid URL provided.</p>';
+				}elseif($backendOption == 2 && empty($backendTarget)) {
+					echo '<p style="color:#cc0000">Please provide a valid URL for redirection.</p>';
+				}else {
+					update_option('icb_backend_enabled', $backendEnabled);
+					update_option('icb_backend_banlist', $backendBanlist);
+					update_option('icb_backend_option', $backendOption);
+					update_option('icb_backend_target', $backendTarget);
+
+					update_option('icb_backend_403_url', $backend403Url);
+					update_option('icb_email_notification', $emailNotification);
+					update_option('icb_backend_bypass_secret_code', $backendBypassSecretCode);
+
+					echo '<p style="color:#666600">Changes are successfully saved.</p>';
+				}
+			}
+
+			$frontendOptions = '';
+			$backendOptions = '';
+			foreach($this->countries as $countryCode => $countryName) {
+				$frontendOptions .= '
+						<option value="' . $countryCode . '"' . (($this->is_in_array($countryCode, $frontendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
+
+				$backendOptions .= '
+						<option value="' . $countryCode . '"' . (($this->is_in_array($countryCode, $backendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
+			}
+
 			echo '
 				<form action="#frontend-block-list" method="post">
 					<p>
@@ -261,10 +534,7 @@ class IP2LocationCountryBlocker {
 					<p>
 						<select name="frontendBanlist[]" multiple="true" style="width:500px;height:200px">';
 
-			foreach($countries as $countryCode => $countryName) {
-				echo '
-						<option value="' . $countryCode . '"' . ((in_array($countryCode, $frontendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
-			}
+						echo $frontendOptions;
 
 			echo '
 						</select>
@@ -293,28 +563,8 @@ class IP2LocationCountryBlocker {
 
 				<a name="backend-block-list"></a>
 				<div style="border-bottom:1px solid #ccc;">
-				<h3>Backend (Admin Area) Block List</h3></div>';
+				<h3>Backend (Admin Area) Block List</h3></div>
 
-			if(isset($_POST['saveBackend'])) {
-				if(!empty($backendTarget) && !filter_var($backendTarget, FILTER_VALIDATE_URL)) {
-					echo '<p style="color:#cc0000">Invalid URL provided.</p>';
-				}elseif($backendOption == 2 && empty($backendTarget)) {
-					echo '<p style="color:#cc0000">Please provide a valid URL for redirection.</p>';
-				}else {
-					update_option('icb_backend_enabled', $backendEnabled);
-					update_option('icb_backend_banlist', $backendBanlist);
-					update_option('icb_backend_option', $backendOption);
-					update_option('icb_backend_target', $backendTarget);
-
-					update_option('icb_backend_403_url', $backend403Url);
-					update_option('icb_email_notification', $emailNotification);
-					update_option('icb_backend_bypass_secret_code', $backendBypassSecretCode);
-
-					echo '<p style="color:#666600">Changes are successfully saved.</p>';
-				}
-			}
-
-			echo '
 				<form action="#backend-block-list" method="post">
 					<p>
 						<input type="checkbox" name="backendEnabled" id="backendEnabled"' . (($backendEnabled) ? ' checked' : '') . '>
@@ -326,10 +576,7 @@ class IP2LocationCountryBlocker {
 					<p>
 						<select name="backendBanlist[]" multiple="true" style="width:500px;height:200px">';
 
-			foreach($countries as $countryCode => $countryName) {
-				echo '
-						<option value="' . $countryCode . '"' . ((in_array($countryCode, $backendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
-			}
+						echo $backendOptions;
 
 			echo '</select>';
 
@@ -404,7 +651,7 @@ class IP2LocationCountryBlocker {
 				}else {
 					// perform backend validation check
 					$banlist = get_option('icb_backend_banlist');
-					if(is_array($banlist) && in_array($result['countryCode'], $banlist)) {
+					if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
 						// Trigger email notification if enabled
 						$email_notification_address = get_option('icb_email_notification');
 						if ($email_notification_address != "none") {
@@ -445,7 +692,7 @@ www.ip2location.com";
 				// Frontend
 				$banlist = get_option('icb_frontend_banlist');
 
-				if(is_array($banlist) && in_array($result['countryCode'], $banlist)) {
+				if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
 					if(get_option('icb_frontend_option') == 1) {
 						IP2LocationCountryBlocker::page_403($frontend403Url);
 					}else {
@@ -574,253 +821,17 @@ www.ip2location.com";
 			);
 	}
 
-	function list_countries() {
-		return array('AF' => 'Afghanistan',
-			'AL' => 'Albania',
-			'DZ' => 'Algeria',
-			'AS' => 'American Samoa',
-			'AD' => 'Andorra',
-			'AO' => 'Angola',
-			'AI' => 'Anguilla',
-			'AQ' => 'Antarctica',
-			'AG' => 'Antigua and Barbuda',
-			'AR' => 'Argentina',
-			'AM' => 'Armenia',
-			'AW' => 'Aruba',
-			'AU' => 'Australia',
-			'AT' => 'Austria',
-			'AZ' => 'Azerbaijan',
-			'BS' => 'Bahamas',
-			'BH' => 'Bahrain',
-			'BD' => 'Bangladesh',
-			'BB' => 'Barbados',
-			'BY' => 'Belarus',
-			'BE' => 'Belgium',
-			'BZ' => 'Belize',
-			'BJ' => 'Benin',
-			'BM' => 'Bermuda',
-			'BT' => 'Bhutan',
-			'BO' => 'Bolivia',
-			'BA' => 'Bosnia and Herzegovina',
-			'BW' => 'Botswana',
-			'BV' => 'Bouvet Island',
-			'BR' => 'Brazil',
-			'IO' => 'British Indian Ocean Territory',
-			'BN' => 'Brunei Darussalam',
-			'BG' => 'Bulgaria',
-			'BF' => 'Burkina Faso',
-			'BI' => 'Burundi',
-			'KH' => 'Cambodia',
-			'CM' => 'Cameroon',
-			'CA' => 'Canada',
-			'CV' => 'Cape Verde',
-			'KY' => 'Cayman Islands',
-			'CF' => 'Central African Republic',
-			'TD' => 'Chad',
-			'CL' => 'Chile',
-			'CN' => 'China',
-			'CX' => 'Christmas Island',
-			'CC' => 'Cocos (Keeling) Islands',
-			'CO' => 'Colombia',
-			'KM' => 'Comoros',
-			'CG' => 'Congo',
-			'CK' => 'Cook Islands',
-			'CR' => 'Costa Rica',
-			'CI' => 'Cote D\'Ivoire',
-			'HR' => 'Croatia',
-			'CU' => 'Cuba',
-			'CY' => 'Cyprus',
-			'CZ' => 'Czech Republic',
-			'CD' => 'Democratic Republic of Congo',
-			'DK' => 'Denmark',
-			'DJ' => 'Djibouti',
-			'DM' => 'Dominica',
-			'DO' => 'Dominican Republic',
-			'TP' => 'East Timor',
-			'EC' => 'Ecuador',
-			'EG' => 'Egypt',
-			'SV' => 'El Salvador',
-			'GQ' => 'Equatorial Guinea',
-			'ER' => 'Eritrea',
-			'EE' => 'Estonia',
-			'ET' => 'Ethiopia',
-			'FK' => 'Falkland Islands (Malvinas)',
-			'FO' => 'Faroe Islands',
-			'FJ' => 'Fiji',
-			'FI' => 'Finland',
-			'FR' => 'France',
-			'FX' => 'France, Metropolitan',
-			'GF' => 'French Guiana',
-			'PF' => 'French Polynesia',
-			'TF' => 'French Southern Territories',
-			'GA' => 'Gabon',
-			'GM' => 'Gambia',
-			'GE' => 'Georgia',
-			'DE' => 'Germany',
-			'GH' => 'Ghana',
-			'GI' => 'Gibraltar',
-			'GR' => 'Greece',
-			'GL' => 'Greenland',
-			'GD' => 'Grenada',
-			'GP' => 'Guadeloupe',
-			'GU' => 'Guam',
-			'GT' => 'Guatemala',
-			'GN' => 'Guinea',
-			'GW' => 'Guinea-bissau',
-			'GY' => 'Guyana',
-			'HT' => 'Haiti',
-			'HM' => 'Heard and Mc Donald Islands',
-			'HN' => 'Honduras',
-			'HK' => 'Hong Kong',
-			'HU' => 'Hungary',
-			'IS' => 'Iceland',
-			'IN' => 'India',
-			'ID' => 'Indonesia',
-			'IR' => 'Iran (Islamic Republic of)',
-			'IQ' => 'Iraq',
-			'IE' => 'Ireland',
-			'IL' => 'Israel',
-			'IT' => 'Italy',
-			'JM' => 'Jamaica',
-			'JP' => 'Japan',
-			'JO' => 'Jordan',
-			'KZ' => 'Kazakhstan',
-			'KE' => 'Kenya',
-			'KI' => 'Kiribati',
-			'KR' => 'Korea, Republic of',
-			'KW' => 'Kuwait',
-			'KG' => 'Kyrgyzstan',
-			'LA' => 'Lao People\'s Democratic Republic',
-			'LV' => 'Latvia',
-			'LB' => 'Lebanon',
-			'LS' => 'Lesotho',
-			'LR' => 'Liberia',
-			'LY' => 'Libyan Arab Jamahiriya',
-			'LI' => 'Liechtenstein',
-			'LT' => 'Lithuania',
-			'LU' => 'Luxembourg',
-			'MO' => 'Macau',
-			'MK' => 'Macedonia',
-			'MG' => 'Madagascar',
-			'MW' => 'Malawi',
-			'MY' => 'Malaysia',
-			'MV' => 'Maldives',
-			'ML' => 'Mali',
-			'MT' => 'Malta',
-			'MH' => 'Marshall Islands',
-			'MQ' => 'Martinique',
-			'MR' => 'Mauritania',
-			'MU' => 'Mauritius',
-			'YT' => 'Mayotte',
-			'MX' => 'Mexico',
-			'FM' => 'Micronesia, Federated States of',
-			'MD' => 'Moldova, Republic of',
-			'MC' => 'Monaco',
-			'MN' => 'Mongolia',
-			'MS' => 'Montserrat',
-			'MA' => 'Morocco',
-			'MZ' => 'Mozambique',
-			'MM' => 'Myanmar',
-			'NA' => 'Namibia',
-			'NR' => 'Nauru',
-			'NP' => 'Nepal',
-			'NL' => 'Netherlands',
-			'AN' => 'Netherlands Antilles',
-			'NC' => 'New Caledonia',
-			'NZ' => 'New Zealand',
-			'NI' => 'Nicaragua',
-			'NE' => 'Niger',
-			'NG' => 'Nigeria',
-			'NU' => 'Niue',
-			'NF' => 'Norfolk Island',
-			'KP' => 'North Korea',
-			'MP' => 'Northern Mariana Islands',
-			'NO' => 'Norway',
-			'OM' => 'Oman',
-			'PK' => 'Pakistan',
-			'PW' => 'Palau',
-			'PA' => 'Panama',
-			'PG' => 'Papua New Guinea',
-			'PY' => 'Paraguay',
-			'PE' => 'Peru',
-			'PH' => 'Philippines',
-			'PN' => 'Pitcairn',
-			'PL' => 'Poland',
-			'PT' => 'Portugal',
-			'PR' => 'Puerto Rico',
-			'QA' => 'Qatar',
-			'RE' => 'Reunion',
-			'RO' => 'Romania',
-			'RU' => 'Russian Federation',
-			'RW' => 'Rwanda',
-			'KN' => 'Saint Kitts and Nevis',
-			'LC' => 'Saint Lucia',
-			'VC' => 'Saint Vincent and the Grenadines',
-			'WS' => 'Samoa',
-			'SM' => 'San Marino',
-			'ST' => 'Sao Tome and Principe',
-			'SA' => 'Saudi Arabia',
-			'SN' => 'Senegal',
-			'SC' => 'Seychelles',
-			'SL' => 'Sierra Leone',
-			'SG' => 'Singapore',
-			'SK' => 'Slovak Republic',
-			'SI' => 'Slovenia',
-			'SB' => 'Solomon Islands',
-			'SO' => 'Somalia',
-			'ZA' => 'South Africa',
-			'GS' => 'South Georgia And The South Sandwich Islands',
-			'ES' => 'Spain',
-			'LK' => 'Sri Lanka',
-			'SH' => 'St. Helena',
-			'PM' => 'St. Pierre and Miquelon',
-			'SD' => 'Sudan',
-			'SR' => 'Suriname',
-			'SJ' => 'Svalbard and Jan Mayen Islands',
-			'SZ' => 'Swaziland',
-			'SE' => 'Sweden',
-			'CH' => 'Switzerland',
-			'SY' => 'Syrian Arab Republic',
-			'TW' => 'Taiwan',
-			'TJ' => 'Tajikistan',
-			'TZ' => 'Tanzania, United Republic of',
-			'TH' => 'Thailand',
-			'TG' => 'Togo',
-			'TK' => 'Tokelau',
-			'TO' => 'Tonga',
-			'TT' => 'Trinidad and Tobago',
-			'TN' => 'Tunisia',
-			'TR' => 'Turkey',
-			'TM' => 'Turkmenistan',
-			'TC' => 'Turks and Caicos Islands',
-			'TV' => 'Tuvalu',
-			'UG' => 'Uganda',
-			'UA' => 'Ukraine',
-			'AE' => 'United Arab Emirates',
-			'GB' => 'United Kingdom',
-			'US' => 'United States',
-			'UM' => 'United States Minor Outlying Islands',
-			'UY' => 'Uruguay',
-			'UZ' => 'Uzbekistan',
-			'VU' => 'Vanuatu',
-			'VA' => 'Vatican City State (Holy See)',
-			'VE' => 'Venezuela',
-			'VN' => 'Viet Nam',
-			'VG' => 'Virgin Islands (British)',
-			'VI' => 'Virgin Islands (U.S.)',
-			'WF' => 'Wallis and Futuna Islands',
-			'EH' => 'Western Sahara',
-			'YE' => 'Yemen',
-			'YU' => 'Yugoslavia',
-			'ZM' => 'Zambia',
-			'ZW' => 'Zimbabwe'
-			);
-	}
-
 	function set_case($s) {
 		$s = ucwords(strtolower($s));
 		$s = preg_replace_callback("/( [ a-zA-Z]{1}')([a-zA-Z0-9]{1})/s", create_function('$matches', 'return $matches[1].strtoupper($matches[2]);'), $s);
 		return $s;
+	}
+
+	function is_in_array($needle, $array) {
+		foreach(array_values($array) as $v)
+			$return[$v] = 1;
+
+		return isset($return[$needle]);
 	}
 }
 
@@ -836,7 +847,7 @@ function ip2location_download_db() {
 		$request = new WP_Http ();
 		$result = $request->request ("http://www.ip2location.com/download?productcode=" . strtoupper($product_code) . "&login=" . rawurlencode($username) . "&password=" . rawurlencode($password), array('timeout' => 120));
 
-		if ((isset ($result->errors)) || (! (in_array ('200', $result ['response'])))) die('ERROR');
+		if ((isset ($result->errors)) || (! (is_in_array ('200', $result ['response'])))) die('ERROR');
 
 		$fp = fopen (WP_PLUGIN_DIR . "/" . dirname (plugin_basename (__FILE__)) . "/database.zip", "w");
 		fwrite ($fp, $result['body']);
@@ -855,11 +866,11 @@ function ip2location_download_db() {
 					$whandle = fopen(WP_PLUGIN_DIR . "/" . dirname (plugin_basename (__FILE__)) . "/database.bin", 'w+');
 					fwrite($whandle, zip_entry_read($zip_entry, $file_size));
 					fclose($whandle);
-					
+
 					//remove the default sample file upon successfully download the latest copy.
 					if (file_exists(DEFAULT_SAMPLE_BIN))
 						unlink(DEFAULT_SAMPLE_BIN);
-						
+
 					// success
 					$found = true;
 				}
