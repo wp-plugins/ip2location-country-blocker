@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 1.9.1
+ * Version: 1.9.2
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -408,12 +408,12 @@ class IP2LocationCountryBlocker {
 					echo '<p style="color:#666600">IP address <b>' . $ipAddress . '</b> belongs to <b>' . $result['countryName'] . '</b>.</p>';
 
 					$banlist = get_option('icb_frontend_banlist');
-					if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
+					if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
 						echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your frontend website.</p>';
 					}
 
 					$banlist = get_option('icb_backend_banlist');
-					if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
+					if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
 						echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your backend website (admin area).</p>';
 					}
 				}
@@ -514,12 +514,12 @@ class IP2LocationCountryBlocker {
 
 			$frontendOptions = '';
 			$backendOptions = '';
-			foreach($this->countries as $countryCode => $countryName) {
+			foreach(IP2LocationCountryBlocker::countries as $countryCode => $countryName) {
 				$frontendOptions .= '
-						<option value="' . $countryCode . '"' . (($this->is_in_array($countryCode, $frontendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
+						<option value="' . $countryCode . '"' . ((IP2LocationCountryBlocker::is_in_array($countryCode, $frontendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
 
 				$backendOptions .= '
-						<option value="' . $countryCode . '"' . (($this->is_in_array($countryCode, $backendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
+						<option value="' . $countryCode . '"' . ((IP2LocationCountryBlocker::is_in_array($countryCode, $backendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
 			}
 
 			echo '
@@ -651,7 +651,7 @@ class IP2LocationCountryBlocker {
 				}else {
 					// perform backend validation check
 					$banlist = get_option('icb_backend_banlist');
-					if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
+					if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
 						// Trigger email notification if enabled
 						$email_notification_address = get_option('icb_email_notification');
 						if ($email_notification_address != "none") {
@@ -692,7 +692,7 @@ www.ip2location.com";
 				// Frontend
 				$banlist = get_option('icb_frontend_banlist');
 
-				if(is_array($banlist) && $this->is_in_array($result['countryCode'], $banlist)) {
+				if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
 					if(get_option('icb_frontend_option') == 1) {
 						IP2LocationCountryBlocker::page_403($frontend403Url);
 					}else {

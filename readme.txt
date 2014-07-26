@@ -78,6 +78,7 @@ Send us email at support@ip2location.com
 * 1.8.0 Fixed the country display issue: South Georgia And The South Sandwich Islands
 * 1.9.0 Added logic to verify if the default old sample bin used for checking.
 * 1.9.1 Fixed performance issues.
+* 1.9.2 Emergency bug fix.
 
 
 == Installation ==
