@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 1.9.4
+ * Version: 2.0.0
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -367,6 +367,22 @@ class IP2LocationCountryBlocker {
 						<option value="DB9BIN">DB9BIN</option>
 						<option value="DB10BIN">DB10BIN</option>
 						<option value="DB11BIN">DB11BIN</option>
+						<option value="DB1LITEBINIPV6">DB1LITEBINIPV6</option>
+						<option value="DB3LITEBINIPV6">DB3LITEBINIPV6</option>
+						<option value="DB5LITEBINIPV6">DB5LITEBINIPV6</option>
+						<option value="DB9LITEBINIPV6">DB9LITEBINIPV6</option>
+						<option value="DB11LITEBINIPV6">DB11LITEBINIPV6</option>
+						<option value="DB1BINIPV6">DB1BINIPV6</option>
+						<option value="DB2BINIPV6">DB2BINIPV6</option>
+						<option value="DB3BINIPV6">DB3BINIPV6</option>
+						<option value="DB4BINIPV6">DB4BINIPV6</option>
+						<option value="DB5BINIPV6">DB5BINIPV6</option>
+						<option value="DB6BINIPV6">DB6BINIPV6</option>
+						<option value="DB7BINIPV6">DB7BINIPV6</option>
+						<option value="DB8BINIPV6">DB8BINIPV6</option>
+						<option value="DB9BINIPV6">DB9BINIPV6</option>
+						<option value="DB10BINIPV6">DB10BINIPV6</option>
+						<option value="DB11BINIPV6">DB11BINIPV6</option>
 					</select>
 					Email: <input id="username" type="text" value="" style="margin-right:10px;" />
 					Password: <input id="password" type="password" value="" style="margin-right:10px;" /> <button id="download">Download</button>
@@ -401,10 +417,11 @@ class IP2LocationCountryBlocker {
 			$ipAddress = (isset($_POST['ipAddress'])) ? $_POST['ipAddress'] : '';
 
 			if(isset($_POST['lookup'])) {
-				if(!filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+				if(!filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
 					echo '<p style="color:#cc0000">Invalid IP address.</p>';
 				}else {
 					$result = IP2LocationCountryBlocker::get_location($ipAddress);
+
 					echo '<p style="color:#666600">IP address <b>' . $ipAddress . '</b> belongs to <b>' . $result['countryName'] . '</b>.</p>';
 
 					$banlist = get_option('icb_frontend_banlist');
@@ -465,7 +482,7 @@ class IP2LocationCountryBlocker {
 				<form action="#ip-query" method="post">
 					<p>
 						<label><b>IP Address: </b></label>
-						<input type="text" name="ipAddress" value="' . $ipAddress . '" maxlength="15" />
+						<input type="text" name="ipAddress" value="' . $ipAddress . '" />
 						<input type="submit" name="lookup" value="Lookup" />
 					</p>
 				</form>
@@ -636,7 +653,7 @@ class IP2LocationCountryBlocker {
 			// do no checking
 		}else {
 			$ipAddress = $_SERVER['REMOTE_ADDR'];
-			if(isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && filter_var($_SERVER["HTTP_X_FORWARDED_FOR"], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+			if(isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && filter_var($_SERVER["HTTP_X_FORWARDED_FOR"], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
 				$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
 			}
 
