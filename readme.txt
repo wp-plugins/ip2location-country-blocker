@@ -79,6 +79,8 @@ Send us email at support@ip2location.com
 * 1.9.0 Added logic to verify if the default old sample bin used for checking.
 * 1.9.1 Fixed performance issues.
 * 1.9.2 Emergency bug fix.
+* 2.0.0 Added IPv6 supports.
+* 2.0.1 Fixed crash issue with other IP2Location plugins.
 
 
 == Installation ==
