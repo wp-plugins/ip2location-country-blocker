@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.0.1
+ * Version: 2.0.3
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -656,7 +656,6 @@ class IP2LocationCountryBlocker {
 			if(isset($_SERVER["HTTP_X_FORWARDED_FOR"]) && filter_var($_SERVER["HTTP_X_FORWARDED_FOR"], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
 				$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
 			}
-
 			$result = IP2LocationCountryBlocker::get_location($ipAddress);
 			// Backend
 			if((preg_match('/\/wp-login.php/i', $_SERVER['REQUEST_URI']) || is_admin())) {
@@ -721,13 +720,14 @@ www.ip2location.com";
 	}
 
 	function page_301($url) {
-		header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
-		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
-		header('Cache-Control: no-store, no-cache, must-revalidate');
-		header('Cache-Control: post-check=0, pre-check=0', false);
-		header('Pragma: no-cache');
-		header('HTTP/1.1 301 Moved Permanently');
-		header('Location: ' . $url);
+		//104 : changes header(location: $url) to the javascript code
+		//header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+		//header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+		//header('Cache-Control: no-store, no-cache, must-revalidate');
+		//header('Cache-Control: post-check=0, pre-check=0', false);
+		//header('Pragma: no-cache');
+		//header('HTTP/1.1 301 Moved Permanently');
+		echo '<script>location.href="' . $url . '";</script>';
 		die;
 	}
 
@@ -755,7 +755,8 @@ www.ip2location.com";
 			</html>');
 		}else {
 			// perform redirection
-			header('Location: ' . $url);
+			//104 : changes header(location: $url) to the javascript code
+			echo '<script>location.href="' . $url . '";</script>';
 		}
 	}
 
