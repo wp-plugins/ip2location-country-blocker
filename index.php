@@ -747,8 +747,6 @@ class IP2LocationCountryBlocker {
 	function check() {
 		global $wpdb;
 
-		$_SERVER['REMOTE_ADDR'] = '8.8.8.8';
-
 		// get frontend and backend url
 		$frontend403Url = get_option('icb_frontend_403_url');
 		if ($frontend403Url == "") $frontend403Url = "default";
