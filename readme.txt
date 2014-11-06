@@ -4,9 +4,9 @@ Donate link: http://www.ip2location.com
 Tags: country blocker, targeted content, geolocation
 Requires at least: 2.0
 Tested up to: 4.0
-Stable tag: 2.0.3
+Stable tag: 2.1.0
 
-Description: IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country.
+Description: IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country. Also log blocked access for statistic purpose.
 
 == Description ==
 
@@ -18,6 +18,7 @@ Key Features
 * Built with default 403 error page.
 * Allow you to customize the 403 error page for each frontend and backend page.
 * Support email notification if an user from blocked countries list was trying to access your admin page.
+* Line chart for blocked pages and countries.
 
 This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database. Moreover, IP2Location provides monthly BIN update for your download, so that you could have the latest and accurate query results.
 
@@ -64,6 +65,7 @@ Send us email at support@ip2location.com
 3. **Backend blocking** - Select countries that you would like to block the visitors from accessing your admin area (wp-login) page. Page redirection supported.
 4. **Custom error page** - Custom your own error page to suit your wordpress theme.
 5. **Email Alert** - Notify you with details when an user was trying to access your admin page.
+6. **Statistic Page** - View blocked traffics and countries.
 
 
 == Changelog ==
@@ -83,6 +85,7 @@ Send us email at support@ip2location.com
 * 2.0.1 Fixed crash issue with other IP2Location plugins.
 * 2.0.2 Updated redirection using javascript to rectify the not working issues reported under certain circumstances
 * 2.0.3 Fixed redirection issue that may not work if additional header information defined by other plugins.
+* 2.1.0 Added statistic to log blocked traffics.
 
 
 == Installation ==

@@ -3,10 +3,12 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.0.3
+ * Version: 2.1.0
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
+ @date_default_timezone_set('UTC');
+
 define('DS', DIRECTORY_SEPARATOR);
 define('_ROOT', dirname(__FILE__) . DS);
 
@@ -262,387 +264,490 @@ class IP2LocationCountryBlocker {
 		'ZM' => 'Zambia',
 		'ZW' => 'Zimbabwe'
 	);
+
+	function admin_styles() {
+		echo '
+		<style>
+			#tab{}
+			#tab ul{list-style:none;overflow:auto;width:100%;margin-left:-2px;margin-bottom:-1px}
+			#tab ul li{float:left;display:block;background:#fff;width:150px;border:1px solid #535353;padding:5px;margin:2px;margin-bottom:0;text-align:center}
+			#tab ul li.selected{border-bottom:1px solid #fff;font-weight:bold}
+			#tab ul li a{text-decoration:none}
+			#tab >div{border:1px solid #535353;margin:0;padding:15px;background:#fff}
+		</style>';
+	}
+
 	function admin_options() {
 		if(is_admin()) {
 			// enable jquery
 			add_action('wp_enqueue_script', 'load_jquery');
 
-			echo '
-			<div class="wrap">
-				<h2>IP2Location Country Blocker</h2>
-				<p>
-					IP2Location Country Blocker allows user to easily block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country. This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database.<br/><br/>
-					BIN file download: <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location Commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" targe="_blank">IP2Location LITE database (free edition)</a>.
-				</p>
+			$q = ( isset( $_GET['q'] ) ) ? $_GET['q'] : '';
 
-				<p>&nbsp;</p>';
+			if ( $q == 'statistic' ) {
+				global $wpdb;
+				require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-			if(!file_exists(IP2LOCATION_DB)) {
+				// Remove logs older than 30 days
+				$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'ip2location_country_blocker_log WHERE date_created <="' . date('Y-m-d H:i:s', strtotime('-30 days')) . '"' );
+
+				// Prepare logs for last 30 days
+				$results = $wpdb->get_results( 'SELECT DATE_FORMAT(date_created, "%Y-%m-%d") AS date, side, COUNT(*) AS total FROM ' . $wpdb->prefix . 'ip2location_country_blocker_log GROUP BY date,side ORDER BY date', OBJECT );
+
+				$lines = array();
+				for($d=30; $d>0; $d--){
+					$lines[date('Y-m-d', strtotime('-' . $d . ' days'))][1] = 0;
+					$lines[date('Y-m-d', strtotime('-' . $d . ' days'))][2] = 0;
+				}
+
+				foreach($results as $result){
+					$lines[$result->date][$result->side] = $result->total;
+				}
+
+				ksort($lines);
+				$rows1 = '';
+				foreach($lines as $line=>$value){
+					$rows1 .= '[\'' . $line . '\', ' . $value[1] . ', ' . $value[2] . '],';
+				}
+
+				// Prepare blocked countries
+				$results = $wpdb->get_results( 'SELECT country_code,COUNT(*) AS total FROM ' . $wpdb->prefix . 'ip2location_country_blocker_log GROUP BY country_code ORDER BY total;', OBJECT );
+				$rows2 = '';
+				foreach($results as $result){
+					$rows2 .= '[\'' . addslashes($this->countries[$result->country_code]) . '\', ' . $result->total . '],';
+				}
+
 				echo '
-				<div style="border:1px solid #f00;background:#faa;padding:10px">
-					Unable to find the IP2Location BIN database! Please download the database at at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.
-				</div>';
-			}else {
-				if (file_exists(DEFAULT_SAMPLE_BIN)){
-					//Still using the sample old BIN
-					echo '
-					<p>
-						<b>Current Database Version: </b>
-					</p>
-					<p style="border:1px solid #f00;background:#faa;padding:10px">
-						<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
-					</p>';
-				}
-				else{
-					echo '
-					<p>
-						<b>Current Database Version: </b>
-						' . date('F Y', filemtime(IP2LOCATION_DB)) . '
-					</p>';
+				<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+				<script type="text/javascript">
+				  google.load("visualization", "1", {packages:["corechart"]});
+				  google.setOnLoadCallback(drawChart);
+				  function drawChart() {
+					var data1 = google.visualization.arrayToDataTable([
+					  [\'Date\', \'Frontend\', \'Backend\'],
+					  ' . rtrim($rows1, ',') . '
+					]);
 
-					if(filemtime(IP2LOCATION_DB) < strtotime('-2 months')) {
-						echo '
-						<p style="border:1px solid #f00;background:#faa;padding:10px">
-							<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
-						</p>';
-					}
-				}
-			}
-			// database update
-			echo '
-				<script>
-					jQuery(document).ready(function($) {
-						// Code here will be executed on document ready. Use $ as normal.
-						jQuery("#download").click(function(){
-							var product_code = jQuery("#product_code").val();
-							var username = jQuery("#username").val();
-							var password = jQuery("#password").val();
+					var data2 = google.visualization.arrayToDataTable([
+					  [\'Country\', \'Traffic Blocked\'],
+					  ' . rtrim($rows2, ',') . '
+					]);
 
-							//disable the download button
-							jQuery("#download").attr("disabled","disabled");
-							jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #ccc; background-color:#ffa;\">Downloading " + product_code + " BIN database in progress... Please wait...</div>");
 
-							var data = {
-								\'action\': \'download_db\',
-								\'product_code\':product_code.toString(),
-								\'username\':username.toString(),
-								\'password\':password.toString()
-							};
+					var chart1 = new google.visualization.LineChart(document.getElementById("chart_div"));
+					chart1.draw(data1, { title: "Blocked Page By Day" });
 
-							$.post(ajaxurl, data, function(result) {
-								if (result == "SUCCESS"){
-									alert("Downloading completed.");
-									jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #0f0; background-color:#afa;\">Successfully downloaded the " + product_code + " BIN database. Please refresh information by reloading the page.</div>");
-								}
-								else{
-									alert("Downloading failed");
-									jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #f00; background-color:#faa;\">Failed to download " + product_code + " BIN database. Please make sure you correctly enter the product code and login crendential. Please also take note to download the BIN product code only.</a>");
-								}
-							}).always(function() {
-								//clear the entry
-								jQuery("#product_code").val("");
-								jQuery("#username").val("");
-								jQuery("#password").val("");
-								jQuery("#download").removeAttr("disabled");
-							});
-						});
-					});
+					var chart2 = new google.visualization.PieChart(document.getElementById("piechart"));
+					chart2.draw(data2, { title: "Blocked Countries" });
+
+				  }
 				</script>
-				<div style="margin-top:10px; padding:10px; border:1px solid #ccc;">
-					<span style="display:block; font-weight:bold; margin-bottom:5px;">Download BIN Database</span>
-					Product Code: <select id="product_code" type="text" value="" style="margin-right:10px;" >
-						<option value="DB1LITEBIN">DB1LITEBIN</option>
-						<option value="DB3LITEBIN">DB3LITEBIN</option>
-						<option value="DB5LITEBIN">DB5LITEBIN</option>
-						<option value="DB9LITEBIN">DB9LITEBIN</option>
-						<option value="DB11LITEBIN">DB11LITEBIN</option>
-						<option value="DB1BIN">DB1BIN</option>
-						<option value="DB2BIN">DB2BIN</option>
-						<option value="DB3BIN">DB3BIN</option>
-						<option value="DB4BIN">DB4BIN</option>
-						<option value="DB5BIN">DB5BIN</option>
-						<option value="DB6BIN">DB6BIN</option>
-						<option value="DB7BIN">DB7BIN</option>
-						<option value="DB8BIN">DB8BIN</option>
-						<option value="DB9BIN">DB9BIN</option>
-						<option value="DB10BIN">DB10BIN</option>
-						<option value="DB11BIN">DB11BIN</option>
-						<option value="DB1LITEBINIPV6">DB1LITEBINIPV6</option>
-						<option value="DB3LITEBINIPV6">DB3LITEBINIPV6</option>
-						<option value="DB5LITEBINIPV6">DB5LITEBINIPV6</option>
-						<option value="DB9LITEBINIPV6">DB9LITEBINIPV6</option>
-						<option value="DB11LITEBINIPV6">DB11LITEBINIPV6</option>
-						<option value="DB1BINIPV6">DB1BINIPV6</option>
-						<option value="DB2BINIPV6">DB2BINIPV6</option>
-						<option value="DB3BINIPV6">DB3BINIPV6</option>
-						<option value="DB4BINIPV6">DB4BINIPV6</option>
-						<option value="DB5BINIPV6">DB5BINIPV6</option>
-						<option value="DB6BINIPV6">DB6BINIPV6</option>
-						<option value="DB7BINIPV6">DB7BINIPV6</option>
-						<option value="DB8BINIPV6">DB8BINIPV6</option>
-						<option value="DB9BINIPV6">DB9BINIPV6</option>
-						<option value="DB10BINIPV6">DB10BINIPV6</option>
-						<option value="DB11BINIPV6">DB11BINIPV6</option>
-					</select>
-					Email: <input id="username" type="text" value="" style="margin-right:10px;" />
-					Password: <input id="password" type="password" value="" style="margin-right:10px;" /> <button id="download">Download</button>
-					<input id="site_url" type="hidden" value="' . get_site_url() . '" />
-					<span style="display:block; font-size:0.8em">Enter the product code, i.e, DB1LITEBIN, (the code in square bracket on your license page) and login credential for the download.</span>
 
-					<div style="margin-top:20px;">
-						Note: If you failed to download the BIN database using this automated downloading tool, please follow the below procedures to manually update the database.
-						<ol style="list-style-type:circle;margin-left:30px">
-							<li>Download the BIN database at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.</li>
-							<li>Decompress the zip file and rename the BIN database to <b>database.bin</b>.</li>
-							<li>Upload <b>database.bin</b> to /wp-content/plugins/ip2location-country-blocker/.</li>
-							<li>Once completed, please refresh the information by reloading the setting page.</li>
-						</ol>
-					</div>
-				</div>
-				<div id="download_status" style="margin:10px 0;">
+				<div class="wrap">
+					<h2>IP2Location Country Blocker</h2>
 
-				</div>
-			';
+					<div id="tab">
+						<ul>
+							<li><a href="' . admin_url('options-general.php?page=ip2location-country-blocker') . '">General</a></li>
+							<li class="selected">Statistic</li>
+						</ul>
 
-			echo '
-				<p>&nbsp;</p>
-				<a name="ip-query"></a>
-				<div style="border-bottom:1px solid #ccc;">
-					<h3>Query IP</h3>
-				</div>
-				<p>
-					Enter a valid IP address for checking.
-				</p>';
-
-			$ipAddress = (isset($_POST['ipAddress'])) ? $_POST['ipAddress'] : '';
-
-			if(isset($_POST['lookup'])) {
-				if(!filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
-					echo '<p style="color:#cc0000">Invalid IP address.</p>';
-				}else {
-					$result = IP2LocationCountryBlocker::get_location($ipAddress);
-
-					echo '<p style="color:#666600">IP address <b>' . $ipAddress . '</b> belongs to <b>' . $result['countryName'] . '</b>.</p>';
-
-					$banlist = get_option('icb_frontend_banlist');
-					if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
-						echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your frontend website.</p>';
-					}
-
-					$banlist = get_option('icb_backend_banlist');
-					if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
-						echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your backend website (admin area).</p>';
-					}
-				}
-			}
-
-			$frontendEnabled = (isset($_POST['saveFrontend']) && isset($_POST['frontendEnabled'])) ? 1 : (((isset($_POST['saveFrontend']) && !isset($_POST['frontendEnabled'])))? 0 : get_option('icb_frontend_enabled'));
-			$backendEnabled = (isset($_POST['saveBackend']) && isset($_POST['backendEnabled'])) ? 1 : (((isset($_POST['saveBackend']) && !isset($_POST['backendEnabled'])))? 0 : get_option('icb_backend_enabled'));
-			$frontendBanlist = (isset($_POST['frontendBanlist'])) ? $_POST['frontendBanlist'] : get_option('icb_frontend_banlist');
-			$frontendBanlist = (!is_array($frontendBanlist)) ? array($frontendBanlist) : $frontendBanlist;
-
-			$backendBanlist = (isset($_POST['backendBanlist'])) ? $_POST['backendBanlist'] : get_option('icb_backend_banlist');
-			$backendBanlist = (!is_array($backendBanlist)) ? array($backendBanlist) : $backendBanlist;
-
-			$frontendOption = (isset($_POST['frontendOption'])) ? $_POST['frontendOption'] : get_option('icb_frontend_option');
-			$backendOption = (isset($_POST['backendOption'])) ? $_POST['backendOption'] : get_option('icb_backend_option');
-			$frontendTarget = (isset($_POST['frontendTarget'])) ? $_POST['frontendTarget'] : get_option('icb_frontend_target');
-			$backendTarget = (isset($_POST['backendTarget'])) ? $_POST['backendTarget'] : get_option('icb_backend_target');
-			// add the front-end 403 custom url
-			$frontend403Url = (isset($_POST['frontend403Url'])) ? $_POST['frontend403Url'] : get_option('icb_frontend_403_url');
-			$backend403Url = (isset($_POST['backend403Url'])) ? $_POST['backend403Url'] : get_option('icb_backend_403_url');
-			// add email notification
-			$emailNotification = (isset($_POST['emailNotification'])) ? $_POST['emailNotification'] : get_option('icb_email_notification');
-			// backend validation bypass secret code
-			$backendBypassSecretCode = (isset($_POST['backendBypassSecretCode'])) ? $_POST['backendBypassSecretCode'] : get_option('icb_backend_bypass_secret_code');
-			// Get all pages for display into a dropdown list (frontend)
-			$frontend_page_dropdown = '<select name="frontend403Url">';
-			$frontend_page_dropdown .= '<option value="default">default</option>';
-			$pages = get_pages(array('post_status' => 'publish,private'));
-			foreach ($pages as $page_data) {
-				if ($frontend403Url == $page_data->guid)
-					$frontend_page_dropdown .= '<option value="' . $page_data->guid . '" selected="selected">' . $page_data->post_title . '</option>';
-				else
-					$frontend_page_dropdown .= '<option value="' . $page_data->guid . '">' . $page_data->post_title . '</option>';
-			}
-			$frontend_page_dropdown .= '</select>';
-			// Get all pages for display into a dropdown list (backend)
-			$backend_page_dropdown = '<select name="backend403Url">';
-			$backend_page_dropdown .= '<option value="default">default</option>';
-			$pages = get_pages(array('post_status' => 'publish,private'));
-			foreach ($pages as $page_data) {
-				if ($backend403Url == $page_data->guid)
-					$backend_page_dropdown .= '<option value="' . $page_data->guid . '" selected="selected">' . $page_data->post_title . '</option>';
-				else
-					$backend_page_dropdown .= '<option value="' . $page_data->guid . '">' . $page_data->post_title . '</option>';
-			}
-			$backend_page_dropdown .= '</select>';
-
-			echo '
-				<form action="#ip-query" method="post">
-					<p>
-						<label><b>IP Address: </b></label>
-						<input type="text" name="ipAddress" value="' . $ipAddress . '" />
-						<input type="submit" name="lookup" value="Lookup" />
-					</p>
-				</form>
-
-				<p>&nbsp;</p>
-
-				<a name="frontend-block-list"></a>
-				<div style="border-bottom:1px solid #ccc;">
-				<h3>Frontend Block List</h3></div>';
-
-			if(isset($_POST['saveFrontend'])) {
-				if(!empty($frontendTarget) && !filter_var($frontendTarget, FILTER_VALIDATE_URL)) {
-					echo '<p style="color:#cc0000">Invalid URL provided.</p>';
-				}elseif($frontendOption == 2 && empty($frontendTarget)) {
-					echo '<p style="color:#cc0000">Please provide a valid URL for redirection.</p>';
-				}else {
-					update_option('icb_frontend_enabled', $frontendEnabled);
-					update_option('icb_frontend_banlist', $frontendBanlist);
-					update_option('icb_frontend_option', $frontendOption);
-					update_option('icb_frontend_target', $frontendTarget);
-					// add custom 403 errors
-					update_option('icb_frontend_403_url', $frontend403Url);
-
-					echo '<p style="color:#666600">Changes are successfully saved.</p>';
-				}
-			}
-
-			if(isset($_POST['saveBackend'])) {
-				if(!empty($backendTarget) && !filter_var($backendTarget, FILTER_VALIDATE_URL)) {
-					echo '<p style="color:#cc0000">Invalid URL provided.</p>';
-				}elseif($backendOption == 2 && empty($backendTarget)) {
-					echo '<p style="color:#cc0000">Please provide a valid URL for redirection.</p>';
-				}else {
-					update_option('icb_backend_enabled', $backendEnabled);
-					update_option('icb_backend_banlist', $backendBanlist);
-					update_option('icb_backend_option', $backendOption);
-					update_option('icb_backend_target', $backendTarget);
-
-					update_option('icb_backend_403_url', $backend403Url);
-					update_option('icb_email_notification', $emailNotification);
-					update_option('icb_backend_bypass_secret_code', $backendBypassSecretCode);
-
-					echo '<p style="color:#666600">Changes are successfully saved.</p>';
-				}
-			}
-
-			$frontendOptions = '';
-			$backendOptions = '';
-			foreach($this->countries as $countryCode => $countryName) {
-				$frontendOptions .= '
-						<option value="' . $countryCode . '"' . ((IP2LocationCountryBlocker::is_in_array($countryCode, $frontendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
-
-				$backendOptions .= '
-						<option value="' . $countryCode . '"' . ((IP2LocationCountryBlocker::is_in_array($countryCode, $backendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
-			}
-
-			echo '
-				<form action="#frontend-block-list" method="post">
-					<p>
-						<input type="checkbox" name="frontendEnabled" id="frontendEnabled"' . (($frontendEnabled) ? ' checked' : '') . '>
-						<label for="frontendEnabled"> Enable Frontend Blocking</label>
-					</p>
-					<p>
-						Select countries that you wish to block the access from frontend (blog pages). Press "CTRL" for multiple selection.
-					</p>
-					<p>
-						<select name="frontendBanlist[]" multiple="true" style="width:500px;height:200px">';
-
-						echo $frontendOptions;
-
-			echo '
-						</select>
-					</p>
-					<p style="font-weight:bold;">
-						Show the following page when visitor is blocked.
-					</p>
-					<div style="margin-left:30px;">
-						<input type="radio" name="frontendOption" value="1" id="frontendOption-1"' . (($frontendOption == 1) ? ' checked' : '') . '>
-						<label for="frontendOption-1"> Error 403: Access Denied</label>
-						<div style="margin-left:30px;">
-							<label for="fronendOption-1">403 Error Page:</label>
-							' . $frontend_page_dropdown . '
+						<div>
+							<h3>Logs for Last 30 Days</h3>
+							<div id="chart_div" style="width: 900px; height: 400px;"></div>
+							<div id="piechart" style="width: 900px; height: 400px;"></div>
 						</div>
-						<br />
-						<input type="radio" name="frontendOption" value="2" id="frontendOption-2"' . (($frontendOption == 2) ? ' checked' : '') . '>
-						<label for="frontendOption-2"> URL: </label>
-						<input type="text" name="frontendTarget" value="' . $frontendTarget . '" size="80" onfocus="document.getElementById(\'frontendOption-2\').checked=true;" />
 					</div>
-					<p>
-						<input type="submit" name="saveFrontend" value="Save Frontend Settings" />
-					</p>
-				</form>
+				</div>';
+			}
+			else {
+				echo '
+				<div class="wrap">
+					<h2>IP2Location Country Blocker</h2>
 
-				<p>&nbsp;</p>
+					<div id="tab">
+						<ul>
+							<li class="selected">General</li>
+							<li><a href="' . admin_url('options-general.php?page=ip2location-country-blocker&q=statistic') . '">Statistic</a></li>
+						</ul>
 
-				<a name="backend-block-list"></a>
-				<div style="border-bottom:1px solid #ccc;">
-				<h3>Backend (Admin Area) Block List</h3></div>
+						<div>
+							<p>
+								IP2Location Country Blocker allows user to easily block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country. This plugin uses IP2Location BIN file for location queries that free your hassle from setting up the relational database.<br/><br/>
+								BIN file download: <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location Commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" targe="_blank">IP2Location LITE database (free edition)</a>.
+							</p>
 
-				<form action="#backend-block-list" method="post">
-					<p>
-						<input type="checkbox" name="backendEnabled" id="backendEnabled"' . (($backendEnabled) ? ' checked' : '') . '>
-						<label for="backendEnabled"> Enable Backend Blocking</label>
-					</p>
-					<p>
-						Select countries that you wish to block the access from backend (admin area). Press "CTRL" for multiple selection.
-					</p>
-					<p>
-						<select name="backendBanlist[]" multiple="true" style="width:500px;height:200px">';
+							<p>&nbsp;</p>';
 
-						echo $backendOptions;
+						if(!file_exists(IP2LOCATION_DB)) {
+							echo '
+							<div style="border:1px solid #f00;background:#faa;padding:10px">
+								Unable to find the IP2Location BIN database! Please download the database at at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.
+							</div>';
+						}else {
+							if (file_exists(DEFAULT_SAMPLE_BIN)){
+								//Still using the sample old BIN
+								echo '
+								<p>
+									<b>Current Database Version: </b>
+								</p>
+								<p style="border:1px solid #f00;background:#faa;padding:10px">
+									<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
+								</p>';
+							}
+							else{
+								echo '
+								<p>
+									<b>Current Database Version: </b>
+									' . date('F Y', filemtime(IP2LOCATION_DB)) . '
+								</p>';
 
-			echo '</select>';
+								if(filemtime(IP2LOCATION_DB) < strtotime('-2 months')) {
+									echo '
+									<p style="border:1px solid #f00;background:#faa;padding:10px">
+										<strong>Reminder: </strong>Your IP2Location database was outdated. Please download the latest version for accurate result.
+									</p>';
+								}
+							}
+						}
+						// database update
+						echo '
+							<script>
+								jQuery(document).ready(function($) {
+									// Code here will be executed on document ready. Use $ as normal.
+									jQuery("#download").click(function(){
+										var product_code = jQuery("#product_code").val();
+										var username = jQuery("#username").val();
+										var password = jQuery("#password").val();
 
-			echo '
-					</p>
-					<p style="font-weight:bold;">
-						Show the following page when visitor is blocked.
-					</p>
-					<div style="margin-left:30px;">
-						<input type="radio" name="backendOption" value="1" id="backendOption-1"' . (($backendOption == 1) ? ' checked' : '') . '>
-						<label for="backendOption-1"> Error 403: Access Denied</label>
-						<div style="margin-left:30px;">
-							<label for="backendOption-1">403 Error Page:</label>
-							' . $backend_page_dropdown . '
+										//disable the download button
+										jQuery("#download").attr("disabled","disabled");
+										jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #ccc; background-color:#ffa;\">Downloading " + product_code + " BIN database in progress... Please wait...</div>");
+
+										var data = {
+											\'action\': \'download_db\',
+											\'product_code\':product_code.toString(),
+											\'username\':username.toString(),
+											\'password\':password.toString()
+										};
+
+										$.post(ajaxurl, data, function(result) {
+											if (result == "SUCCESS"){
+												alert("Downloading completed.");
+												jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #0f0; background-color:#afa;\">Successfully downloaded the " + product_code + " BIN database. Please refresh information by reloading the page.</div>");
+											}
+											else{
+												alert("Downloading failed");
+												jQuery("#download_status").html("<div style=\"padding:10px; border:1px solid #f00; background-color:#faa;\">Failed to download " + product_code + " BIN database. Please make sure you correctly enter the product code and login crendential. Please also take note to download the BIN product code only.</a>");
+											}
+										}).always(function() {
+											//clear the entry
+											jQuery("#product_code").val("");
+											jQuery("#username").val("");
+											jQuery("#password").val("");
+											jQuery("#download").removeAttr("disabled");
+										});
+									});
+								});
+							</script>
+							<div style="margin-top:10px; padding:10px; border:1px solid #ccc;">
+								<span style="display:block; font-weight:bold; margin-bottom:5px;">Download BIN Database</span>
+								Product Code: <select id="product_code" type="text" value="" style="margin-right:10px;" >
+									<option value="DB1LITEBIN">DB1LITEBIN</option>
+									<option value="DB3LITEBIN">DB3LITEBIN</option>
+									<option value="DB5LITEBIN">DB5LITEBIN</option>
+									<option value="DB9LITEBIN">DB9LITEBIN</option>
+									<option value="DB11LITEBIN">DB11LITEBIN</option>
+									<option value="DB1BIN">DB1BIN</option>
+									<option value="DB2BIN">DB2BIN</option>
+									<option value="DB3BIN">DB3BIN</option>
+									<option value="DB4BIN">DB4BIN</option>
+									<option value="DB5BIN">DB5BIN</option>
+									<option value="DB6BIN">DB6BIN</option>
+									<option value="DB7BIN">DB7BIN</option>
+									<option value="DB8BIN">DB8BIN</option>
+									<option value="DB9BIN">DB9BIN</option>
+									<option value="DB10BIN">DB10BIN</option>
+									<option value="DB11BIN">DB11BIN</option>
+									<option value="DB1LITEBINIPV6">DB1LITEBINIPV6</option>
+									<option value="DB3LITEBINIPV6">DB3LITEBINIPV6</option>
+									<option value="DB5LITEBINIPV6">DB5LITEBINIPV6</option>
+									<option value="DB9LITEBINIPV6">DB9LITEBINIPV6</option>
+									<option value="DB11LITEBINIPV6">DB11LITEBINIPV6</option>
+									<option value="DB1BINIPV6">DB1BINIPV6</option>
+									<option value="DB2BINIPV6">DB2BINIPV6</option>
+									<option value="DB3BINIPV6">DB3BINIPV6</option>
+									<option value="DB4BINIPV6">DB4BINIPV6</option>
+									<option value="DB5BINIPV6">DB5BINIPV6</option>
+									<option value="DB6BINIPV6">DB6BINIPV6</option>
+									<option value="DB7BINIPV6">DB7BINIPV6</option>
+									<option value="DB8BINIPV6">DB8BINIPV6</option>
+									<option value="DB9BINIPV6">DB9BINIPV6</option>
+									<option value="DB10BINIPV6">DB10BINIPV6</option>
+									<option value="DB11BINIPV6">DB11BINIPV6</option>
+								</select>
+								Email: <input id="username" type="text" value="" style="margin-right:10px;" />
+								Password: <input id="password" type="password" value="" style="margin-right:10px;" /> <input type="submit" name="download" id="download" value="Download" class="button action" />
+								<input id="site_url" type="hidden" value="' . get_site_url() . '" />
+								<span style="display:block; font-size:0.8em">Enter the product code, i.e, DB1LITEBIN, (the code in square bracket on your license page) and login credential for the download.</span>
+
+								<div style="margin-top:20px;">
+									Note: If you failed to download the BIN database using this automated downloading tool, please follow the below procedures to manually update the database.
+									<ol style="list-style-type:circle;margin-left:30px">
+										<li>Download the BIN database at <a href="http://www.ip2location.com/?r=wordpress" target="_blank">IP2Location commercial database</a> | <a href="http://lite.ip2location.com/?r=wordpress" target="_blank">IP2Location LITE database (free edition)</a>.</li>
+										<li>Decompress the zip file and rename the BIN database to <b>database.bin</b>.</li>
+										<li>Upload <b>database.bin</b> to /wp-content/plugins/ip2location-country-blocker/.</li>
+										<li>Once completed, please refresh the information by reloading the setting page.</li>
+									</ol>
+								</div>
+							</div>
+							<div id="download_status" style="margin:10px 0;">
+
+							</div>
+						';
+
+						echo '
+							<p>&nbsp;</p>
+							<a name="ip-query"></a>
+							<div style="border-bottom:1px solid #ccc;">
+								<h3>Query IP</h3>
+							</div>
+							<p>
+								Enter a valid IP address for checking.
+							</p>';
+
+						$ipAddress = (isset($_POST['ipAddress'])) ? $_POST['ipAddress'] : '';
+
+						if(isset($_POST['lookup'])) {
+							if(!filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6)) {
+								echo '<p style="color:#cc0000">Invalid IP address.</p>';
+							}else {
+								$result = IP2LocationCountryBlocker::get_location($ipAddress);
+
+								echo '<p style="color:#666600">IP address <b>' . $ipAddress . '</b> belongs to <b>' . $result['countryName'] . '</b>.</p>';
+
+								$banlist = get_option('icb_frontend_banlist');
+								if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
+									echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your frontend website.</p>';
+								}
+
+								$banlist = get_option('icb_backend_banlist');
+								if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
+									echo '<p style="color:#666600">Visitors from this country are being blocked from accessing your backend website (admin area).</p>';
+								}
+							}
+						}
+
+						$frontendEnabled = (isset($_POST['saveFrontend']) && isset($_POST['frontendEnabled'])) ? 1 : (((isset($_POST['saveFrontend']) && !isset($_POST['frontendEnabled'])))? 0 : get_option('icb_frontend_enabled'));
+						$backendEnabled = (isset($_POST['saveBackend']) && isset($_POST['backendEnabled'])) ? 1 : (((isset($_POST['saveBackend']) && !isset($_POST['backendEnabled'])))? 0 : get_option('icb_backend_enabled'));
+						$frontendBanlist = (isset($_POST['frontendBanlist'])) ? $_POST['frontendBanlist'] : get_option('icb_frontend_banlist');
+						$frontendBanlist = (!is_array($frontendBanlist)) ? array($frontendBanlist) : $frontendBanlist;
+
+						$backendBanlist = (isset($_POST['backendBanlist'])) ? $_POST['backendBanlist'] : get_option('icb_backend_banlist');
+						$backendBanlist = (!is_array($backendBanlist)) ? array($backendBanlist) : $backendBanlist;
+
+						$frontendOption = (isset($_POST['frontendOption'])) ? $_POST['frontendOption'] : get_option('icb_frontend_option');
+						$backendOption = (isset($_POST['backendOption'])) ? $_POST['backendOption'] : get_option('icb_backend_option');
+						$frontendTarget = (isset($_POST['frontendTarget'])) ? $_POST['frontendTarget'] : get_option('icb_frontend_target');
+						$backendTarget = (isset($_POST['backendTarget'])) ? $_POST['backendTarget'] : get_option('icb_backend_target');
+						// add the front-end 403 custom url
+						$frontend403Url = (isset($_POST['frontend403Url'])) ? $_POST['frontend403Url'] : get_option('icb_frontend_403_url');
+						$backend403Url = (isset($_POST['backend403Url'])) ? $_POST['backend403Url'] : get_option('icb_backend_403_url');
+						// add email notification
+						$emailNotification = (isset($_POST['emailNotification'])) ? $_POST['emailNotification'] : get_option('icb_email_notification');
+						// backend validation bypass secret code
+						$backendBypassSecretCode = (isset($_POST['backendBypassSecretCode'])) ? $_POST['backendBypassSecretCode'] : get_option('icb_backend_bypass_secret_code');
+						// Get all pages for display into a dropdown list (frontend)
+						$frontend_page_dropdown = '<select name="frontend403Url">';
+						$frontend_page_dropdown .= '<option value="default">default</option>';
+						$pages = get_pages(array('post_status' => 'publish,private'));
+						foreach ($pages as $page_data) {
+							if ($frontend403Url == $page_data->guid)
+								$frontend_page_dropdown .= '<option value="' . $page_data->guid . '" selected="selected">' . $page_data->post_title . '</option>';
+							else
+								$frontend_page_dropdown .= '<option value="' . $page_data->guid . '">' . $page_data->post_title . '</option>';
+						}
+						$frontend_page_dropdown .= '</select>';
+						// Get all pages for display into a dropdown list (backend)
+						$backend_page_dropdown = '<select name="backend403Url">';
+						$backend_page_dropdown .= '<option value="default">default</option>';
+						$pages = get_pages(array('post_status' => 'publish,private'));
+						foreach ($pages as $page_data) {
+							if ($backend403Url == $page_data->guid)
+								$backend_page_dropdown .= '<option value="' . $page_data->guid . '" selected="selected">' . $page_data->post_title . '</option>';
+							else
+								$backend_page_dropdown .= '<option value="' . $page_data->guid . '">' . $page_data->post_title . '</option>';
+						}
+						$backend_page_dropdown .= '</select>';
+
+						echo '
+							<form action="#ip-query" method="post">
+								<p>
+									<label><b>IP Address: </b></label>
+									<input type="text" name="ipAddress" value="' . $ipAddress . '" />
+									<input type="submit" name="lookup" value="Lookup" class="button action" />
+								</p>
+							</form>
+
+							<p>&nbsp;</p>
+
+							<a name="frontend-block-list"></a>
+							<div style="border-bottom:1px solid #ccc;">
+							<h3>Frontend Block List</h3></div>';
+
+						if(isset($_POST['saveFrontend'])) {
+							if(!empty($frontendTarget) && !filter_var($frontendTarget, FILTER_VALIDATE_URL)) {
+								echo '<p style="color:#cc0000">Invalid URL provided.</p>';
+							}elseif($frontendOption == 2 && empty($frontendTarget)) {
+								echo '<p style="color:#cc0000">Please provide a valid URL for redirection.</p>';
+							}else {
+								update_option('icb_frontend_enabled', $frontendEnabled);
+								update_option('icb_frontend_banlist', $frontendBanlist);
+								update_option('icb_frontend_option', $frontendOption);
+								update_option('icb_frontend_target', $frontendTarget);
+								// add custom 403 errors
+								update_option('icb_frontend_403_url', $frontend403Url);
+
+								echo '<p style="color:#666600">Changes are successfully saved.</p>';
+							}
+						}
+
+						if(isset($_POST['saveBackend'])) {
+							if(!empty($backendTarget) && !filter_var($backendTarget, FILTER_VALIDATE_URL)) {
+								echo '<p style="color:#cc0000">Invalid URL provided.</p>';
+							}elseif($backendOption == 2 && empty($backendTarget)) {
+								echo '<p style="color:#cc0000">Please provide a valid URL for redirection.</p>';
+							}else {
+								update_option('icb_backend_enabled', $backendEnabled);
+								update_option('icb_backend_banlist', $backendBanlist);
+								update_option('icb_backend_option', $backendOption);
+								update_option('icb_backend_target', $backendTarget);
+
+								update_option('icb_backend_403_url', $backend403Url);
+								update_option('icb_email_notification', $emailNotification);
+								update_option('icb_backend_bypass_secret_code', $backendBypassSecretCode);
+
+								echo '<p style="color:#666600">Changes are successfully saved.</p>';
+							}
+						}
+
+						$frontendOptions = '';
+						$backendOptions = '';
+						foreach($this->countries as $countryCode => $countryName) {
+							$frontendOptions .= '
+									<option value="' . $countryCode . '"' . ((IP2LocationCountryBlocker::is_in_array($countryCode, $frontendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
+
+							$backendOptions .= '
+									<option value="' . $countryCode . '"' . ((IP2LocationCountryBlocker::is_in_array($countryCode, $backendBanlist)) ? ' selected' : '') . '> ' . $countryName . '</option>';
+						}
+
+						echo '
+							<form action="#frontend-block-list" method="post">
+								<p>
+									<input type="checkbox" name="frontendEnabled" id="frontendEnabled"' . (($frontendEnabled) ? ' checked' : '') . '>
+									<label for="frontendEnabled"> Enable Frontend Blocking</label>
+								</p>
+								<p>
+									Select countries that you wish to block the access from frontend (blog pages). Press "CTRL" for multiple selection.
+								</p>
+								<p>
+									<select name="frontendBanlist[]" multiple="true" style="width:500px;height:200px">';
+
+									echo $frontendOptions;
+
+						echo '
+									</select>
+								</p>
+								<p style="font-weight:bold;">
+									Show the following page when visitor is blocked.
+								</p>
+								<div style="margin-left:30px;">
+									<input type="radio" name="frontendOption" value="1" id="frontendOption-1"' . (($frontendOption == 1) ? ' checked' : '') . '>
+									<label for="frontendOption-1"> Error 403: Access Denied</label>
+									<div style="margin-left:30px;">
+										<label for="fronendOption-1">403 Error Page:</label>
+										' . $frontend_page_dropdown . '
+									</div>
+									<br />
+									<input type="radio" name="frontendOption" value="2" id="frontendOption-2"' . (($frontendOption == 2) ? ' checked' : '') . '>
+									<label for="frontendOption-2"> URL: </label>
+									<input type="text" name="frontendTarget" value="' . $frontendTarget . '" size="80" onfocus="document.getElementById(\'frontendOption-2\').checked=true;" />
+								</div>
+								<p>
+									<input type="submit" name="saveFrontend" id="submit" class="button button-primary" value="Save Frontend Settings"  />
+								</p>
+							</form>
+
+							<p>&nbsp;</p>
+
+							<a name="backend-block-list"></a>
+							<div style="border-bottom:1px solid #ccc;">
+							<h3>Backend (Admin Area) Block List</h3></div>
+
+							<form action="#backend-block-list" method="post">
+								<p>
+									<input type="checkbox" name="backendEnabled" id="backendEnabled"' . (($backendEnabled) ? ' checked' : '') . '>
+									<label for="backendEnabled"> Enable Backend Blocking</label>
+								</p>
+								<p>
+									Select countries that you wish to block the access from backend (admin area). Press "CTRL" for multiple selection.
+								</p>
+								<p>
+									<select name="backendBanlist[]" multiple="true" style="width:500px;height:200px">';
+
+									echo $backendOptions;
+
+						echo '</select>';
+
+						echo '
+								</p>
+								<p style="font-weight:bold;">
+									Show the following page when visitor is blocked.
+								</p>
+								<div style="margin-left:30px;">
+									<input type="radio" name="backendOption" value="1" id="backendOption-1"' . (($backendOption == 1) ? ' checked' : '') . '>
+									<label for="backendOption-1"> Error 403: Access Denied</label>
+									<div style="margin-left:30px;">
+										<label for="backendOption-1">403 Error Page:</label>
+										' . $backend_page_dropdown . '
+									</div>
+									<br />
+									<input type="radio" name="backendOption" value="2" id="backendOption-2"' . (($backendOption == 2) ? ' checked' : '') . '>
+									<label for="backendOption-2"> URL: </label>
+									<input type="text" name="backendTarget" value="' . $backendTarget . '" size="80" onfocus="document.getElementById(\'backendOption-2\').checked=true;" />
+								</div>';
+						// ///
+						// Get the user email address for notification
+						echo '<p style="font-weight:bold;">Send email notification to: <select name="emailNotification">';
+						echo '<option value="none">none</option>';
+						$blogusers = get_users('search=*');
+						foreach ($blogusers as $user) {
+							if ($user->user_email == $emailNotification)
+								echo '<option value="' . $user->user_email . '" selected="selected">' . $user->display_name . '</option>';
+							else
+								echo '<option value="' . $user->user_email . '">' . $user->display_name . '</option>';
+						}
+						echo '</select></p>';
+						// //
+						// Add secret code for validation bypass
+						echo '<p style="font-weight:bold;">Secret code to bypass validation (max 20 chars): <input type="text" name="backendBypassSecretCode" maxlength="20" value="' . $backendBypassSecretCode . '" /><br/>';
+						echo '<span style="font-size:9px;">To bypass the validation, append the secret_code with value to wp-login.php page. For example, http://www.example.com/wp-login.php?secret_code=1234567</span>';
+						echo '</p>';
+
+						echo '
+								<p>
+									<input type="submit" name="saveBackend" id="submit" class="button button-primary" value="Save Backend Settings"  />
+								</p>
+							</form>
 						</div>
-						<br />
-						<input type="radio" name="backendOption" value="2" id="backendOption-2"' . (($backendOption == 2) ? ' checked' : '') . '>
-						<label for="backendOption-2"> URL: </label>
-						<input type="text" name="backendTarget" value="' . $backendTarget . '" size="80" onfocus="document.getElementById(\'backendOption-2\').checked=true;" />
 					</div>';
-			// ///
-			// Get the user email address for notification
-			echo '<p style="font-weight:bold;">Send email notification to: <select name="emailNotification">';
-			echo '<option value="none">none</option>';
-			$blogusers = get_users('search=*');
-			foreach ($blogusers as $user) {
-				if ($user->user_email == $emailNotification)
-					echo '<option value="' . $user->user_email . '" selected="selected">' . $user->display_name . '</option>';
-				else
-					echo '<option value="' . $user->user_email . '">' . $user->display_name . '</option>';
 			}
-			echo '</select></p>';
-			// //
-			// Add secret code for validation bypass
-			echo '<p style="font-weight:bold;">Secret code to bypass validation (max 20 chars): <input type="text" name="backendBypassSecretCode" maxlength="20" value="' . $backendBypassSecretCode . '" /><br/>';
-			echo '<span style="font-size:9px;">To bypass the validation, append the secret_code with value to wp-login.php page. For example, http://www.example.com/wp-login.php?secret_code=1234567</span>';
-			echo '</p>';
-
-			echo '
-					<p>
-						<input type="submit" name="saveBackend" value="Save Backend Settings" />
-					</p>
-				</form>
-
-				<p style="height:200px">&nbsp;</p>';
 		}
 	}
 
 	function check() {
+		global $wpdb;
+
 		// get frontend and backend url
 		$frontend403Url = get_option('icb_frontend_403_url');
 		if ($frontend403Url == "") $frontend403Url = "default";
@@ -668,6 +773,9 @@ class IP2LocationCountryBlocker {
 					// perform backend validation check
 					$banlist = get_option('icb_backend_banlist');
 					if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
+						require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+						dbDelta( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 2, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
+
 						// Trigger email notification if enabled
 						$email_notification_address = get_option('icb_email_notification');
 						if ($email_notification_address != "none") {
@@ -704,11 +812,15 @@ www.ip2location.com";
 						}
 					}
 				}
-			}else {
+			}
+			else {
 				// Frontend
 				$banlist = get_option('icb_frontend_banlist');
 
 				if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
+					require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+					dbDelta( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 1, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
+
 					if(get_option('icb_frontend_option') == 1) {
 						IP2LocationCountryBlocker::page_403($frontend403Url);
 					}else {
@@ -781,10 +893,13 @@ www.ip2location.com";
 			update_option('active_plugins', $active_plugins);
 		}
 
-		add_action('admin_menu', array(&$this, 'admin_page'));
+		add_action( 'admin_menu', array( &$this, 'admin_page' ) );
+		add_action( 'admin_head', array( &$this, 'admin_styles' ) );
 	}
 
 	function set_defaults() {
+		global $wpdb;
+
 		// Initial default settings
 		update_option('icb_frontend_enabled', 1);
 		update_option('icb_backend_enabled', 1);
@@ -799,9 +914,27 @@ www.ip2location.com";
 		update_option('icb_backend_403_url', 'default');
 		update_option('icb_email_notification', 'none');
 		update_option('icb_backend_bypass_secret_code', '');
+
+		$sql = 'CREATE TABLE IF NOT EXISTS ' . $wpdb->prefix . 'ip2location_country_blocker_log (
+			`log_id` INT(11) NOT NULL AUTO_INCREMENT,
+			`ip_address` VARCHAR(50) NOT NULL COLLATE \'utf8_bin\',
+			`country_code` CHAR(2) NOT NULL COLLATE \'utf8_bin\',
+			`side` CHAR(1) NOT NULL COLLATE \'utf8_bin\',
+			`page` VARCHAR(100) NOT NULL COLLATE \'utf8_bin\',
+			`date_created` DATETIME NOT NULL,
+			PRIMARY KEY (`log_id`),
+			INDEX `idx_country_code` (`country_code`),
+			INDEX `idx_side` (`side`),
+			INDEX `idx_date_created` (`date_created`)
+		) COLLATE=\'utf8_bin\'';
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $sql );
 	}
 
 	function uninstall() {
+		global $wpdb;
+
 		// Remove all settings
 		delete_option('icb_frontend_enabled');
 		delete_option('icb_backend_enabled');
@@ -816,6 +949,9 @@ www.ip2location.com";
 		delete_option('icb_backend_403_url');
 		delete_option('icb_email_notification');
 		delete_option('icb_backend_bypass_secret_code');
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( 'DROP TABLE IF EXISTS ' . $wpdb->prefix . 'ip2location_country_blocker_log' );
 	}
 
 	function get_location($ip) {
@@ -842,17 +978,18 @@ www.ip2location.com";
 			);
 	}
 
-	function set_case($s) {
-		$s = ucwords(strtolower($s));
-		$s = preg_replace_callback("/( [ a-zA-Z]{1}')([a-zA-Z0-9]{1})/s", create_function('$matches', 'return $matches[1].strtoupper($matches[2]);'), $s);
+	function set_case( $s ) {
+		$s = ucwords( strtolower( $s ) );
+		$s = preg_replace_callback( "/( [ a-zA-Z]{1}')([a-zA-Z0-9]{1})/s", create_function( '$matches', 'return $matches[1].strtoupper($matches[2]);' ), $s );
 		return $s;
 	}
 
-	function is_in_array($needle, $array) {
-		foreach(array_values($array) as $v)
+	function is_in_array( $needle, $array ) {
+		foreach( array_values( $array ) as $v ) {
 			$return[$v] = 1;
+		}
 
-		return isset($return[$needle]);
+		return isset( $return[$needle] );
 	}
 }
 
