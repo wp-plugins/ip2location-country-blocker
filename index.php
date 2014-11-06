@@ -284,9 +284,8 @@ class IP2LocationCountryBlocker {
 
 			$q = ( isset( $_GET['q'] ) ) ? $_GET['q'] : '';
 
-			if ( $q == 'statistic' ) {
+			if ( $q == 'statistics' ) {
 				global $wpdb;
-				require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 				// Remove logs older than 30 days
 				$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'ip2location_country_blocker_log WHERE date_created <="' . date('Y-m-d H:i:s', strtotime('-30 days')) . '"' );
@@ -307,7 +306,7 @@ class IP2LocationCountryBlocker {
 				ksort($lines);
 				$rows1 = '';
 				foreach($lines as $line=>$value){
-					$rows1 .= '[\'' . $line . '\', ' . $value[1] . ', ' . $value[2] . '],';
+					$rows1 .= '[\'' . $line . '\', ' . (($value[1]) ? $value[1] : 0) . ', ' . (($value[2]) ? $value[2] : 0) . '],';
 				}
 
 				// Prepare blocked countries
@@ -349,7 +348,7 @@ class IP2LocationCountryBlocker {
 					<div id="tab">
 						<ul>
 							<li><a href="' . admin_url('options-general.php?page=ip2location-country-blocker') . '">General</a></li>
-							<li class="selected">Statistic</li>
+							<li class="selected">Statistics</li>
 						</ul>
 
 						<div>
@@ -368,7 +367,7 @@ class IP2LocationCountryBlocker {
 					<div id="tab">
 						<ul>
 							<li class="selected">General</li>
-							<li><a href="' . admin_url('options-general.php?page=ip2location-country-blocker&q=statistic') . '">Statistic</a></li>
+							<li><a href="' . admin_url('options-general.php?page=ip2location-country-blocker&q=statistics') . '">Statistics</a></li>
 						</ul>
 
 						<div>
@@ -748,6 +747,8 @@ class IP2LocationCountryBlocker {
 	function check() {
 		global $wpdb;
 
+		$_SERVER['REMOTE_ADDR'] = '8.8.8.8';
+
 		// get frontend and backend url
 		$frontend403Url = get_option('icb_frontend_403_url');
 		if ($frontend403Url == "") $frontend403Url = "default";
@@ -773,8 +774,7 @@ class IP2LocationCountryBlocker {
 					// perform backend validation check
 					$banlist = get_option('icb_backend_banlist');
 					if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
-						require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-						dbDelta( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 2, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
+						$wpdb->query( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 2, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
 
 						// Trigger email notification if enabled
 						$email_notification_address = get_option('icb_email_notification');
@@ -818,8 +818,7 @@ www.ip2location.com";
 				$banlist = get_option('icb_frontend_banlist');
 
 				if(is_array($banlist) && IP2LocationCountryBlocker::is_in_array($result['countryCode'], $banlist)) {
-					require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-					dbDelta( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 1, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
+					$wpdb->query( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 1, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
 
 					if(get_option('icb_frontend_option') == 1) {
 						IP2LocationCountryBlocker::page_403($frontend403Url);
