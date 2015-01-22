@@ -5,12 +5,12 @@ ini_set('display_errors', 1);
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.2.0
+ * Version: 2.2.1
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
 
-defined('DS') or define('DS', DIRECTORY_SEPARATOR);
+defined( 'DS' ) or define( 'DS', DIRECTORY_SEPARATOR );
 define( 'IP2LOCATION_COUNTRY_BLOCKER_ROOT', dirname( __FILE__ ) . DS );
 
 class IP2LocationCountryBlocker {
@@ -27,7 +27,7 @@ class IP2LocationCountryBlocker {
 		$files = scandir( IP2LOCATION_COUNTRY_BLOCKER_ROOT );
 
 		foreach( $files as $file ){
-			if ( substr( $file, -4 ) == '.bin' || substr( $file, -4 ) == '.BIN' ){
+			if ( strtoupper( substr( $file, -4 ) ) == '.BIN' ){
 				update_option( 'ip2location_country_blocker_database', $file );
 				break;
 			}
@@ -921,7 +921,7 @@ class IP2LocationCountryBlocker {
 				$files = scandir( IP2LOCATION_COUNTRY_BLOCKER_ROOT );
 
 				foreach( $files as $file ){
-					if ( substr( $file, -4 ) == '.bin' || substr( $file, -4 ) == '.BIN' ){
+					if ( strtoupper( substr( $file, -4 ) ) == '.BIN' ){
 						@unlink( IP2LOCATION_COUNTRY_BLOCKER_ROOT . $file );
 					}
 				}
@@ -947,7 +947,7 @@ class IP2LocationCountryBlocker {
 	}
 
 	function get_country_name( $code ) {
-		return ( isset( self::$countries[$code] ) ) ? self::$countries[$code] : '';
+		return ( isset( $this->$countries[$code] ) ) ? $this->$countries[$code] : '';
 	}
 }
 
