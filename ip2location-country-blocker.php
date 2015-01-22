@@ -784,6 +784,16 @@ class IP2LocationCountryBlocker {
 			INDEX `idx_side` (`side`),
 			INDEX `idx_date_created` (`date_created`)
 		) COLLATE=\'utf8_bin\'' );
+
+		// Find any .BIN files in current directory
+		$files = scandir( IP2LOCATION_COUNTRY_BLOCKER_ROOT );
+
+		foreach( $files as $file ){
+			if ( strtoupper( substr( $file, -4 ) ) == '.BIN' ){
+				update_option( 'ip2location_country_blocker_database', $file );
+				break;
+			}
+		}
 	}
 
 	function uninstall() {
@@ -791,6 +801,7 @@ class IP2LocationCountryBlocker {
 
 		delete_option( 'ip2location_country_blocker_lookup_mode' );
 		delete_option( 'ip2location_country_blocker_api_key' );
+		delete_option( 'ip2location_country_blocker_database' );
 		delete_option( 'ip2location_country_blocker_frontend_enabled' );
 		delete_option( 'ip2location_country_blocker_backend_enabled' );
 		delete_option( 'ip2location_country_blocker_frontend_banlist' );
