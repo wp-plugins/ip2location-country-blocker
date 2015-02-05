@@ -1,11 +1,9 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 /**
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.2.1
+ * Version: 2.2.2
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -597,13 +595,10 @@ class IP2LocationCountryBlocker {
 
 	function check_block() {
 		global $wpdb;
+		global $wp_session;
 
-		if ( !session_id() ) {
-			session_start();
-		}
-
-		if( isset( $_SESSION['ip2location_country_blocker_checked'] ) ) {
-			unset( $_SESSION['ip2location_country_blocker_checked'] );
+		if( isset( $wp_session['ip2location_country_blocker_checked'] ) ) {
+			unset( $wp_session['ip2location_country_blocker_checked'] );
 			return;
 		}
 
@@ -640,7 +635,7 @@ class IP2LocationCountryBlocker {
 				$banlist = get_option( 'ip2location_country_blocker_backend_banlist' );
 
 				if ( is_array($banlist) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
-					$_SESSION['ip2location_country_blocker_checked'] = true;
+					$_wp_session['ip2location_country_blocker_checked'] = true;
 
 					$wpdb->query( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 2, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
 
@@ -682,7 +677,7 @@ class IP2LocationCountryBlocker {
 			$banlist = get_option( 'ip2location_country_blocker_frontend_banlist' );
 
 			if( is_array( $banlist ) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
-				$_SESSION['ip2location_country_blocker_checked'] = true;
+				$_wp_session['ip2location_country_blocker_checked'] = true;
 
 				$wpdb->query( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 1, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
 
