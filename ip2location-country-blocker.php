@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.2.3
+ * Version: 2.2.4
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -407,18 +407,18 @@ class IP2LocationCountryBlocker {
 							</div>';
 						}
 
-						$banlist = get_option('ip2location_country_blocker_frontend_banlist');
+						$banlist = get_option( 'ip2location_country_blocker_frontend_banlist' );
 
-						if ( is_array( $banlist ) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
+						if ( get_option( 'ip2location_country_blocker_frontend_enabled' ) && is_array( $banlist ) && $this->is_in_array( $response['countryCode'], $banlist ) ) {
 							echo '
 							<div id="message" class="updated">
 								<p>Visitors from this country are being blocked from accessing your frontend website.</p>
 							</div>';
 						}
 
-						$banlist = get_option('ip2location_country_blocker_backend_banlist');
+						$banlist = get_option( 'ip2location_country_blocker_backend_banlist' );
 
-						if ( is_array( $banlist ) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
+						if ( get_option( 'ip2location_country_blocker_backend_enabled' ) && is_array( $banlist ) && $this->is_in_array( $response['countryCode'], $banlist ) ) {
 							echo '
 							<div id="message" class="updated">
 								<p>Visitors from this country are being blocked from accessing your backend website (admin area).</p>
@@ -626,12 +626,13 @@ class IP2LocationCountryBlocker {
 
 		$result = $this->get_location( $ipAddress );
 
-		if ( ( preg_match( '/\/wp-login.php/', $_SERVER['REQUEST_URI'] ) || is_admin() ) ) {
-			$secret_code = ( isset( $_GET['secret_code'] ) ) ? $_GET['secret_code'] : '';
+		// Backend
+		if ( ( preg_match( '/wp-login\.php/', $_SERVER['SCRIPT_NAME'] ) ) ) {
+			$secret_code = ( isset( $_GET['secret_code'] ) ) ? $_GET['secret_code'] : md5(microtime());
 
 			$bypass_code = get_option( 'ip2location_country_blocker_bypass_code' );
 
-			if ( $bypass_code != '' && $bypass_code != $secret_code ) {
+			if ( $bypass_code != $secret_code ) {
 				$banlist = get_option( 'ip2location_country_blocker_backend_banlist' );
 
 				if ( is_array($banlist) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
@@ -672,8 +673,9 @@ class IP2LocationCountryBlocker {
 				}
 			}
 		}
-		else {
-			// Frontend
+
+		// Frontend
+		else if ( ( !preg_match( '/\/wp-admin\//', $_SERVER['REQUEST_URI'] ) ) ) {
 			$banlist = get_option( 'ip2location_country_blocker_frontend_banlist' );
 
 			if( is_array( $banlist ) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
