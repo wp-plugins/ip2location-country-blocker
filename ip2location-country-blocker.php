@@ -620,8 +620,6 @@ class IP2LocationCountryBlocker {
 
 		$ipAddress = $_SERVER['REMOTE_ADDR'];
 
-		$ipAddress = '8.8.8.8';
-
 		if( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && filter_var( $_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6 ) ) {
 			$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		}
