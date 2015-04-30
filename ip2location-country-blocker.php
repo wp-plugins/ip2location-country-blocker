@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.2.5
+ * Version: 2.3.0
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -127,6 +127,14 @@ class IP2LocationCountryBlocker {
 			$backend_redirected_url = ( isset( $_POST['backendRedirectedUrl'] ) ) ? $_POST['backendRedirectedUrl'] : get_option( 'ip2location_country_blocker_backend_reditected_url' );
 			$email_notification = ( isset( $_POST['email_notification'] ) ) ? $_POST['email_notification'] : get_option( 'ip2location_country_blocker_email_notification' );
 			$bypass_code = ( isset( $_POST['bypassCode'] ) ) ? $_POST['bypassCode'] : get_option( 'ip2location_country_blocker_bypass_code' );
+
+			$my_country_code = '??';
+
+			$_SERVER['REMOTE_ADDR'] = '8.8.8.8';
+
+			if( $response = $this->get_location( $_SERVER['REMOTE_ADDR'] ) ){
+				$my_country_code = $response['countryCode'];
+			}
 
 			if( isset( $_POST['lookupMode'] ) ) {
 				update_option( 'ip2location_country_blocker_lookup_mode', $lookup_mode );
@@ -260,6 +268,24 @@ class IP2LocationCountryBlocker {
 						});
 
 						$("#' . ( ( $lookup_mode == 'bin' ) ? 'bin-mode' : 'ws-mode' ) . '").show();
+
+						$("#frontendTarget").on("focus", function(){
+							$("#frontendOption-2").attr("checked", "checked");
+						});
+
+						$("#backendTarget").on("focus", function(){
+							$("#backendOption-2").attr("checked", "checked");
+						});
+
+						$("#saveBackendSettings").on("click", function(e){
+							$("#backendBanList :selected").each(function(i, selected){
+								if($(selected).val() == "' . $my_country_code . '"){
+									if(!confirm("== WARNING ==\nYou are about to block your own country.\nThis can prevent you from login if you do not set a bypass code.")){
+										e.preventDefault();
+									}
+								}
+							});
+						});
 					});
 				})( jQuery );
 			</script>
@@ -495,10 +521,8 @@ class IP2LocationCountryBlocker {
 							</label>
 						</p>
 
-						<label>
-							<input type="radio" name="frontendOption" value="2"' . ( ( $frontend_option == 2 ) ? ' checked' : '' ) . '>
-							URL: <input type="text" name="frontendTarget" value="' . $frontend_target . '" size="80" />
-						</label>
+						<label><input type="radio" name="frontendOption" id="frontendOption-2" value="2"' . ( ( $frontend_option == 2 ) ? ' checked' : '' ) . '>URL:</label>
+						<input type="text" name="frontendTarget" id="frontendTarget" value="' . $frontend_target . '" size="80" />
 					</div>
 					<p>
 						<input type="submit" name="saveFrontend" id="submit" class="button button-primary" value="Save Frontend Settings"  />
@@ -520,7 +544,7 @@ class IP2LocationCountryBlocker {
 						Select countries that you wish to block the access from backend (admin area). Press "CTRL" for multiple selection.
 					</p>
 					<p>
-						<select name="backendBanlist[]" multiple="true" style="width:500px;height:200px">';
+						<select name="backendBanlist[]" id="backendBanList" multiple="true" style="width:500px;height:200px">';
 
 			foreach( $this->countries as $countryCode=>$countryName ) {
 				echo '
@@ -557,10 +581,8 @@ class IP2LocationCountryBlocker {
 							</label>
 						</p>
 
-						<label>
-							<input type="radio" name="backendOption" value="2"' . ( ( $backend_option == 2 ) ? ' checked' : '' ) . '>
-							URL: <input type="text" name="backendTarget" value="' . $backend_target . '" size="80" />
-						</label>
+						<label><input type="radio" name="backendOption" id="backendOption-2" value="2"' . ( ( $backend_option == 2 ) ? ' checked' : '' ) . '>URL:</label>
+						<input type="text" name="backendTarget" id="backendTarget" value="' . $backend_target . '" size="80" />
 					</div>
 
 					<p style="font-weight:bold;">
@@ -586,7 +608,7 @@ class IP2LocationCountryBlocker {
 						<span style="font-size:9px;">To bypass the validation, append the secret_code with value to wp-login.php page. For example, http://www.example.com/wp-login.php?secret_code=1234567</span>
 					</p>
 					<p>
-						<input type="submit" name="saveBackend" id="submit" class="button button-primary" value="Save Backend Settings"  />
+						<input type="submit" name="saveBackend" id="saveBackendSettings" class="button button-primary" value="Save Backend Settings"  />
 					</p>
 				</form>
 			</div>';
