@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.3.0
+ * Version: 2.3.1
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -129,8 +129,6 @@ class IP2LocationCountryBlocker {
 			$bypass_code = ( isset( $_POST['bypassCode'] ) ) ? $_POST['bypassCode'] : get_option( 'ip2location_country_blocker_bypass_code' );
 
 			$my_country_code = '??';
-
-			$_SERVER['REMOTE_ADDR'] = '8.8.8.8';
 
 			if( $response = $this->get_location( $_SERVER['REMOTE_ADDR'] ) ){
 				$my_country_code = $response['countryCode'];
