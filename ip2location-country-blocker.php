@@ -3,13 +3,17 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.3.1
+ * Version: 2.3.2
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
 
 defined( 'DS' ) or define( 'DS', DIRECTORY_SEPARATOR );
 define( 'IP2LOCATION_COUNTRY_BLOCKER_ROOT', dirname( __FILE__ ) . DS );
+
+// For test purpose
+if( isset( $_SERVER['DEV_MODE'] ) )
+	$_SERVER['REMOTE_ADDR'] = '8.8.8.8';
 
 class IP2LocationCountryBlocker {
 	private $countries = array( 'AF' => 'Afghanistan','AL' => 'Albania','DZ' => 'Algeria','AS' => 'American Samoa','AD' => 'Andorra','AO' => 'Angola','AI' => 'Anguilla','AQ' => 'Antarctica','AG' => 'Antigua and Barbuda','AR' => 'Argentina','AM' => 'Armenia','AW' => 'Aruba','AU' => 'Australia','AT' => 'Austria','AZ' => 'Azerbaijan','BS' => 'Bahamas','BH' => 'Bahrain','BD' => 'Bangladesh','BB' => 'Barbados','BY' => 'Belarus','BE' => 'Belgium','BZ' => 'Belize','BJ' => 'Benin','BM' => 'Bermuda','BT' => 'Bhutan','BO' => 'Bolivia','BA' => 'Bosnia and Herzegovina','BW' => 'Botswana','BV' => 'Bouvet Island','BR' => 'Brazil','IO' => 'British Indian Ocean Territory','BN' => 'Brunei Darussalam','BG' => 'Bulgaria','BF' => 'Burkina Faso','BI' => 'Burundi','KH' => 'Cambodia','CM' => 'Cameroon','CA' => 'Canada','CV' => 'Cape Verde','KY' => 'Cayman Islands','CF' => 'Central African Republic','TD' => 'Chad','CL' => 'Chile','CN' => 'China','CX' => 'Christmas Island','CC' => 'Cocos (Keeling) Islands','CO' => 'Colombia','KM' => 'Comoros','CG' => 'Congo','CK' => 'Cook Islands','CR' => 'Costa Rica','CI' => 'Cote D\'Ivoire','HR' => 'Croatia','CU' => 'Cuba','CY' => 'Cyprus','CZ' => 'Czech Republic','CD' => 'Democratic Republic of Congo','DK' => 'Denmark','DJ' => 'Djibouti','DM' => 'Dominica','DO' => 'Dominican Republic','TP' => 'East Timor','EC' => 'Ecuador','EG' => 'Egypt','SV' => 'El Salvador','GQ' => 'Equatorial Guinea','ER' => 'Eritrea','EE' => 'Estonia','ET' => 'Ethiopia','FK' => 'Falkland Islands (Malvinas)','FO' => 'Faroe Islands','FJ' => 'Fiji','FI' => 'Finland','FR' => 'France','FX' => 'France, Metropolitan','GF' => 'French Guiana','PF' => 'French Polynesia','TF' => 'French Southern Territories','GA' => 'Gabon','GM' => 'Gambia','GE' => 'Georgia','DE' => 'Germany','GH' => 'Ghana','GI' => 'Gibraltar','GR' => 'Greece','GL' => 'Greenland','GD' => 'Grenada','GP' => 'Guadeloupe','GU' => 'Guam','GT' => 'Guatemala','GN' => 'Guinea','GW' => 'Guinea-bissau','GY' => 'Guyana','HT' => 'Haiti','HM' => 'Heard and Mc Donald Islands','HN' => 'Honduras','HK' => 'Hong Kong','HU' => 'Hungary','IS' => 'Iceland','IN' => 'India','ID' => 'Indonesia','IR' => 'Iran (Islamic Republic of)','IQ' => 'Iraq','IE' => 'Ireland','IL' => 'Israel','IT' => 'Italy','JM' => 'Jamaica','JP' => 'Japan','JO' => 'Jordan','KZ' => 'Kazakhstan','KE' => 'Kenya','KI' => 'Kiribati','KR' => 'Korea, Republic of','KW' => 'Kuwait','KG' => 'Kyrgyzstan','LA' => 'Lao People\'s Democratic Republic','LV' => 'Latvia','LB' => 'Lebanon','LS' => 'Lesotho','LR' => 'Liberia','LY' => 'Libyan Arab Jamahiriya','LI' => 'Liechtenstein','LT' => 'Lithuania','LU' => 'Luxembourg','MO' => 'Macau','MK' => 'Macedonia','MG' => 'Madagascar','MW' => 'Malawi','MY' => 'Malaysia','MV' => 'Maldives','ML' => 'Mali','MT' => 'Malta','MH' => 'Marshall Islands','MQ' => 'Martinique','MR' => 'Mauritania','MU' => 'Mauritius','YT' => 'Mayotte','MX' => 'Mexico','FM' => 'Micronesia, Federated States of','MD' => 'Moldova, Republic of','MC' => 'Monaco','MN' => 'Mongolia','MS' => 'Montserrat','MA' => 'Morocco','MZ' => 'Mozambique','MM' => 'Myanmar','NA' => 'Namibia','NR' => 'Nauru','NP' => 'Nepal','NL' => 'Netherlands','AN' => 'Netherlands Antilles','NC' => 'New Caledonia','NZ' => 'New Zealand','NI' => 'Nicaragua','NE' => 'Niger','NG' => 'Nigeria','NU' => 'Niue','NF' => 'Norfolk Island','KP' => 'North Korea','MP' => 'Northern Mariana Islands','NO' => 'Norway','OM' => 'Oman','PK' => 'Pakistan','PW' => 'Palau','PA' => 'Panama','PG' => 'Papua New Guinea','PY' => 'Paraguay','PE' => 'Peru','PH' => 'Philippines','PN' => 'Pitcairn','PL' => 'Poland','PT' => 'Portugal','PR' => 'Puerto Rico','QA' => 'Qatar','RE' => 'Reunion','RO' => 'Romania','RU' => 'Russian Federation','RW' => 'Rwanda','KN' => 'Saint Kitts and Nevis','LC' => 'Saint Lucia','VC' => 'Saint Vincent and the Grenadines','WS' => 'Samoa','SM' => 'San Marino','ST' => 'Sao Tome and Principe','SA' => 'Saudi Arabia','SN' => 'Senegal','SC' => 'Seychelles','SL' => 'Sierra Leone','SG' => 'Singapore','SK' => 'Slovak Republic','SI' => 'Slovenia','SB' => 'Solomon Islands','SO' => 'Somalia','ZA' => 'South Africa','GS' => 'South Georgia And The South Sandwich Islands','ES' => 'Spain','LK' => 'Sri Lanka','SH' => 'St. Helena','PM' => 'St. Pierre and Miquelon','SD' => 'Sudan','SR' => 'Suriname','SJ' => 'Svalbard and Jan Mayen Islands','SZ' => 'Swaziland','SE' => 'Sweden','CH' => 'Switzerland','SY' => 'Syrian Arab Republic','TW' => 'Taiwan','TJ' => 'Tajikistan','TZ' => 'Tanzania, United Republic of','TH' => 'Thailand','TG' => 'Togo','TK' => 'Tokelau','TO' => 'Tonga','TT' => 'Trinidad and Tobago','TN' => 'Tunisia','TR' => 'Turkey','TM' => 'Turkmenistan','TC' => 'Turks and Caicos Islands','TV' => 'Tuvalu','UG' => 'Uganda','UA' => 'Ukraine','AE' => 'United Arab Emirates','GB' => 'United Kingdom','US' => 'United States','UM' => 'United States Minor Outlying Islands','UY' => 'Uruguay','UZ' => 'Uzbekistan','VU' => 'Vanuatu','VA' => 'Vatican City State (Holy See)','VE' => 'Venezuela','VN' => 'Viet Nam','VG' => 'Virgin Islands (British)','VI' => 'Virgin Islands (U.S.)','WF' => 'Wallis and Futuna Islands','EH' => 'Western Sahara','YE' => 'Yemen','YU' => 'Yugoslavia','ZM' => 'Zambia','ZW' => 'Zimbabwe' );
@@ -615,12 +619,16 @@ class IP2LocationCountryBlocker {
 
 	function check_block() {
 		global $wpdb;
-		global $wp_session;
 
-		if( isset( $wp_session['ip2location_country_blocker_checked'] ) ) {
-			unset( $wp_session['ip2location_country_blocker_checked'] );
+		$this->start_session();
+
+		if( isset( $_SESSION['ip2location_country_blocker_checked'] ) ) {
+			unset( $_SESSION['ip2location_country_blocker_checked'] );
 			return;
 		}
+
+		if( is_admin() )
+			unset( $_SESSION['ip2location_country_blocker_secret_code'] );
 
 		$frontend_redirected_url = get_option( 'ip2location_country_blocker_frontend_reditected_url' );
 
@@ -648,14 +656,16 @@ class IP2LocationCountryBlocker {
 
 		// Backend
 		if ( ( preg_match( '/wp-login\.php/', $_SERVER['SCRIPT_NAME'] ) ) ) {
-			$secret_code = ( isset( $_GET['secret_code'] ) ) ? $_GET['secret_code'] : md5(microtime());
+			$secret_code = ( isset( $_GET['secret_code'] ) ) ? $_GET['secret_code'] : ( ( isset( $_SESSION['ip2location_country_blocker_secret_code'] ) ) ? $_SESSION['ip2location_country_blocker_secret_code'] : md5( microtime() ) );
+
+			$_SESSION['ip2location_country_blocker_secret_code'] = $secret_code;
 
 			$bypass_code = get_option( 'ip2location_country_blocker_bypass_code' );
 
-			if ( $bypass_code != $secret_code && empty( $_POST ) ) {
+			if ( $bypass_code != $secret_code ) {
 				$banlist = get_option( 'ip2location_country_blocker_backend_banlist' );
 
-				if ( is_array($banlist) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
+				if ( get_option( 'ip2location_country_blocker_backend_enabled' ) && is_array($banlist) && $this->is_in_array( $result['countryCode'], $banlist ) ) {
 					$_wp_session['ip2location_country_blocker_checked'] = true;
 
 					$wpdb->query( 'INSERT INTO ' . $wpdb->prefix . 'ip2location_country_blocker_log (ip_address, country_code, side, page, date_created) VALUES ("' . $ipAddress . '", "' . $result['countryCode'] . '", 2, "' . basename(get_permalink()) . '", "' . date('Y-m-d H:i:s') . '")' );
@@ -753,6 +763,11 @@ class IP2LocationCountryBlocker {
 
 	function admin_page() {
 		add_options_page( 'IP2Location Country Blocker', 'IP2Location Country Blocker', 8, 'ip2location-country-blocker', array( &$this, 'admin_options' ) );
+	}
+
+	function start_session() {
+		if( !session_id() )
+			session_start();
 	}
 
 	function init() {
