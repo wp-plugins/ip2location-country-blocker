@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.3.2
+ * Version: 2.3.4
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -857,23 +857,23 @@ class IP2LocationCountryBlocker {
 		switch( get_option( 'ip2location_country_blocker_lookup_mode' ) ) {
 			case 'bin':
 				// Make sure IP2Location database is exist.
-				if ( !is_file( IP2LOCATION_COUNTRY_BLOCKER_ROOT . get_option( 'ip2location_country_blocker_database' ) ) ) {
+				if ( !is_file( IP2LOCATION_COUNTRY_BLOCKER_ROOT . get_option( 'ip2location_redirection_database' ) ) ) {
 					return false;
 				}
 
 				if ( ! class_exists( 'IP2LocationRecord' ) && ! class_exists( 'IP2Location' ) ) {
-					require_once( IP2LOCATION_COUNTRY_BLOCKER_ROOT . 'ip2location.class.php' );
+					require_once( IP2LOCATION_COUNTRY_BLOCKER_ROOT . 'class.IP2Location.php' );
 				}
 
 				// Create IP2Location object.
-				$geo = new IP2Location( IP2LOCATION_COUNTRY_BLOCKER_ROOT . get_option( 'ip2location_country_blocker_database' ) );
+				$db = new \IP2Location\Database( IP2LOCATION_COUNTRY_BLOCKER_ROOT . get_option( 'ip2location_redirection_database' ) );
 
 				// Get geolocation by IP address.
-				$response = $geo->lookup( $ip );
+				$response = $db->lookup( $ip );
 
 				return array(
-					'countryCode' => $response->countryCode,
-					'countryName' => $response->countryName,
+					'countryCode' => $response['countryCode'],
+					'countryName' => $response['countryName'],
 				);
 			break;
 
