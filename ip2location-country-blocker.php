@@ -3,7 +3,7 @@
  * Plugin Name: IP2Location Country Blocker
  * Plugin URI: http://ip2location.com/tutorials/wordpress-ip2location-country-blocker
  * Description: Block visitors from accessing your website or admin area by their country.
- * Version: 2.3.5
+ * Version: 2.3.6
  * Author: IP2Location
  * Author URI: http://www.ip2location.com
  */
@@ -408,7 +408,7 @@ class IP2LocationCountryBlocker {
 			$ipAddress = ( isset( $_POST['ipAddress'] ) ) ? $_POST['ipAddress'] : '';
 
 			if ( isset( $_POST['lookup'] ) ) {
-				if ( !filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6 ) ) {
+				if ( !filter_var($ipAddress, FILTER_VALIDATE_IP ) ) {
 					echo '
 					<div id="message" class="error">
 						<p><strong>ERROR</strong>: Invalid IP address.</p>
@@ -644,7 +644,7 @@ class IP2LocationCountryBlocker {
 
 		$ipAddress = $_SERVER['REMOTE_ADDR'];
 
-		if( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && filter_var( $_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6 ) ) {
+		if( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) && filter_var( $_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP ) ) {
 			$ipAddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		}
 
