@@ -5,7 +5,7 @@ Donate link: http://www.ip2location.com
 Tags: country blocker, targeted content, geolocation
 Requires at least: 2.0
 Tested up to: 4.3
-Stable tag: 2.3.6
+Stable tag: 2.3.7
 
 Description: IP2Location Country Blocker allows user to block visitors from accessing your frontend (the blog pages) or backend (the admin area) based on their country. Also log blocked access for statistic purpose.
 
@@ -99,6 +99,7 @@ Send us email at support@ip2location.com
 * 2.3.4 Use latest IP2Location library for lookup.
 * 2.3.5 Fixed issue when upgrading from previous version.
 * 2.3.6 Fixed compatible issue with PHP 5.3.
+* 2.3.7 Fixed compatible issue with PHP 5.3 and earlier.
 
 == Installation ==
 
